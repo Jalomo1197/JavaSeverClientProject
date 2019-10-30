@@ -2,6 +2,7 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -13,6 +14,9 @@ public class RPLS extends Application {
 	VBox LayoutOne;
 	HBox subLayoutOne;
 	TextField portNumber;
+
+
+	
 	Button enterPortNumber_btn, turnOnSever_btn;
 	Text gameServer_text, portNumPrompt_text, connectedClients_text, serverInfo_text, winner_text;
 	ListView information_listView;

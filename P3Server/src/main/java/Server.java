@@ -32,8 +32,11 @@ public class Server{
 			try(ServerSocket mysocket = new ServerSocket(5555);){
 		    System.out.println("Server is waiting for a client!");
 			
+		    //while gameInfo.has2players == false 
+		    //while clients.size() <2
 		    while(true) {
-		
+		    	
+		    	threadCheck();
 				ClientThread c = new ClientThread(mysocket.accept(), count);
 				callback.accept("client has connected to server: " + "client #" + count);
 				clients.add(c);
@@ -46,10 +49,22 @@ public class Server{
 				catch(Exception e) {
 					callback.accept("Server socket did not launch");
 				}
+			
 			}//end of while
 		}
 	
-
+		//every time a new thread is added this
+	   //updates the array list checking for threads that are dead 
+		// removing them from the arrayList
+		public void threadCheck() {
+			for (int i =0; i < clients.size(); i++) {
+				ClientThread t = clients.get(i);
+				if (!t.isAlive()) clients.remove(i);
+				//should we also check getState ? if they are runnable/terminated
+			}
+			
+		}//end threadCheck
+		
 		class ClientThread extends Thread{
 			
 		
@@ -63,6 +78,8 @@ public class Server{
 				this.count = count;	
 			}
 			
+			//when each client joins the server this tells
+			//all other clients there are new clients on the server
 			public void updateClients(String message) {
 				for(int i = 0; i < clients.size(); i++) {
 					ClientThread t = clients.get(i);
