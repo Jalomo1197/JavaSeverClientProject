@@ -11,4 +11,5 @@ public class GameInfo implements Serializable {
 	int p1Points;
 	int p2Points;
 	String winner;
+	String message; //maybe to send info about why winner won?? idk 
 }

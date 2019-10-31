@@ -1,3 +1,4 @@
+import java.beans.EventHandler;
 import java.util.HashMap;
 
 import javafx.application.Application;
@@ -6,23 +7,25 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class RPLS extends Application {
 	Client clientConnection;
 	ListView information_listView;
 	//this hashmap will have all of the scenes 
 	//denoted by a string
-	
-	//intro
-	//waiting
-	//choose
-	//show
-	//end	
+	//intro//waiting//choose//show//end	
 	HashMap<String, Scene> sceneMap;
+	
+	//this hashmap will have all the images for the moves denoted by a string
+	//rock//paper//scissors//lizzard//spock
+	HashMap<String, ImageView> imageMap;
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -38,13 +41,49 @@ public class RPLS extends Application {
 		 sceneMap = new HashMap<String, Scene>();
 		 sceneMap.put("intro",  createIntro());
 		 sceneMap.put("waiting", createWaitingScene());
-		//sceneMap.put("client",  createChooseScene()); 
-		//sceneMap.put("server",  createShowScene());
-	   //sceneMap.put("client",  createEndScene()); 
+		 sceneMap.put("choose",  createChooseScene()); 
+		 sceneMap.put("show",  createShowScene());
+	     sceneMap.put("end",  createEndScene()); 
 		
 		Scene scene = new Scene(new HBox(),600,600);
 		primaryStage.setScene(scene);
 		//primaryStage.setScene(sceneMap.get("intro");
+		
+		//****** gui items ********
+		//for intro
+		port = new TextField("Please Enter a Port #: ");
+		portText = new Text("Please Enter a Port #: ");
+		ipAddress = new TextField("Please Enter an IP Address: ");
+		ipAddressText = new Text("Please Enter an IP Address: ");
+		connectToServer = new Button("Connect To Server");
+		
+		//for waiting
+		waiting = new Text("Waiting for Another Player...");
+		
+		//for choose scene
+		//buttons for the image moves.. we will but image views inside these buttons
+		//using .setGraphic()
+	    rock = new Button("rock");
+		paper = new Button("paper");
+		scissors = new Button("scissors");
+		lizard = new Button("lizard");
+		spock = new Button("spock");
+		playAgain = new Button("PLAY AGAIN");
+		quit = new Button("QUIT");
+		moveButtons = new HBox(rock, paper, scissors, lizard, spock);
+		
+		//*************//
+		
+		//not sure about the below code..how to handle closing out of the box
+		/*
+		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent t) {
+                Platform.exit();
+                System.exit(0);
+            }
+        });
+		*/
 		
 		primaryStage.show();
 		
@@ -67,9 +106,12 @@ public class RPLS extends Application {
 		
 			//now start the clientConnection client object, this calls the run method 
 		    clientConnection.start();
-		    //should we have an event here if the clientConnection got caught in the catch
-		    //then we have to go back to the intro scene 
-		    //otherwise switch to next Scene primaryStage.setScene(sceneMap.get(waiting)); or .get(choose)
+		  
+		    if (clientConnection.isAlive() == false) {}//do something go back to intro scene..send an error message
+		    else {
+		    	 //otherwise switch to next Scene primaryStage.setScene(sceneMap.get(waiting)); or .get(choose)		   
+		    	}
+		    
 		});
 		
 		
@@ -79,26 +121,25 @@ public class RPLS extends Application {
 	
 	TextField port;
 	TextField ipAddress;
-	Button connectToServer;
+	Button connectToServer, rock, paper, scissors, lizard, spock, playAgain, quit;
 	VBox introInputs;
 	Text portText;
 	Text ipAddressText;
-	HBox waitingBox;
-	Text waiting;
-	
-	
+	HBox waitingBox, moveButtons, moveImageBox;
+	Text waiting; //for the waiting scene 
+	ListView<String> scores; //this will go in the choose and show scenes 
+	ImageView clientMove; // this is for the player will = imageMap.get("clients move string")
+	ImageView opponentMove; // this is for the opponent 
+	BorderPane choosePane, showPane; //this is for the choose scene and show scene
+	Text moveEvaluation; //this will display during the show scene and will display why your move won/lost "Rock Beats Scissors! You lose" 
+	Text winner;
+	HBox endButtons;
+	VBox endBox;
 	
 	
 	//Initializing all the scenes for the To be put into the scene hashmap
 	public Scene createIntro() {
-
-		port = new TextField("Please Enter a Port #: ");
-		portText = new Text("Please Enter a Port #: ");
-		ipAddress = new TextField("Please Enter an IP Address: ");
-		ipAddressText = new Text("Please Enter an IP Address: ");
-		
-		connectToServer = new Button("Connect To Server");
-		introInputs = new VBox(port,portText, ipAddress, ipAddressText, connectToServer);
+		introInputs = new VBox(port, portText, ipAddress, ipAddressText, connectToServer);
 		//this is to set padding between the items in the vbox
 		introInputs.setSpacing(5);
 		return new Scene(introInputs, 500, 400);
@@ -107,26 +148,43 @@ public class RPLS extends Application {
 	
 	public Scene createWaitingScene() {
 		
-		waiting = new Text("Waiting for Another Player...");
 		waitingBox = new HBox(waiting);
 		return new Scene(waitingBox, 300, 200);		
 	}
 	
-	/*
+	
 	public Scene createChooseScene() {
-		
-		return new Scene(pane, 500, 400);
+		//will have all the buttons, ListView,ImageView
+		choosePane = new BorderPane();
+		//the center will be an imageView 
+		choosePane.setCenter(clientMove);
+		//the Bottoms is an HBox with the move buttons
+		choosePane.setBottom(moveButtons);
+		//the right is a ListView with the scores
+		choosePane.setRight(scores);
+				
+		return new Scene(choosePane, 500, 400);
 	}
+	
 	public Scene createShowScene() {
-		
-		return new Scene(pane, 500, 400);
+		//this is an HBox with a view of both moves
+		moveImageBox = new HBox(clientMove, opponentMove);
+		showPane = new BorderPane();
+		showPane.setCenter(moveImageBox);
+		//the right is a ListView with the scores
+		showPane.setRight(scores);
+		return new Scene(showPane, 500, 400);
 	}
+	
 	public Scene createEndScene() {
-		
-		return new Scene(pane, 500, 400);
+		//this hBox has the play again and quit buttons 
+		endButtons = new HBox(playAgain, quit);
+		//this vBox has the winning text and the buttons
+		endBox = new VBox(winner,endButtons);
+		return new Scene(endBox, 500, 400);
 	}
 
-	*/
+	
 	
 		
 }

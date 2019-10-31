@@ -16,12 +16,15 @@ public class Server{
 	ArrayList<ClientThread> clients = new ArrayList<ClientThread>();
 	TheServer server;
 	private Consumer<Serializable> callback;
+	int portNum;
+	GameInfo game = new GameInfo();
 	
-	Server(Consumer<Serializable> call){
+	Server(Consumer<Serializable> call, String port){
 	
 		callback = call;
 		server = new TheServer();
 		server.start();
+		portNum = Integer.parseInt(port);
 	}
 	
 	
@@ -29,7 +32,7 @@ public class Server{
 		
 		public void run() {
 		
-			try(ServerSocket mysocket = new ServerSocket(5555);){
+			try(ServerSocket mysocket = new ServerSocket(portNum);){
 		    System.out.println("Server is waiting for a client!");
 			
 		    //while gameInfo.has2players == false 
