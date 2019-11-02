@@ -109,6 +109,11 @@ public class Server{
 				 while(true) {
 					    try {
 					    	String data = in.readObject().toString();
+					    	//game = in.readObject();
+					    	
+					    	//I think.. the client will just send a string of what choice
+					    	//they are making and the server will send the whole gameInfo object w everything else??? 
+					    	
 					    	callback.accept("client: " + count + " sent: " + data);
 					    	updateClients("client #"+count+" said: "+data);
 					    	

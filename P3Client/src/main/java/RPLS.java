@@ -26,6 +26,7 @@ public class RPLS extends Application {
 	//this hashmap will have all the images for the moves denoted by a string
 	//rock//paper//scissors//lizzard//spock
 	HashMap<String, ImageView> imageMap;
+	String move;
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -68,13 +69,16 @@ public class RPLS extends Application {
 		scissors = new Button("scissors");
 		lizard = new Button("lizard");
 		spock = new Button("spock");
+		sendMove = new Button("Send Move");
 		playAgain = new Button("PLAY AGAIN");
 		quit = new Button("QUIT");
-		moveButtons = new HBox(rock, paper, scissors, lizard, spock);
+		
+		moveButtons = new HBox(rock, paper, scissors, lizard, spock, sendMove);
 		
 		//*************//
 		
 		//not sure about the below code..how to handle closing out of the box
+		
 		/*
 		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
@@ -102,6 +106,7 @@ public class RPLS extends Application {
 		this.connectToServer.setOnAction(e->{clientConnection = new Client(data -> {
 			Platform.runLater(()->{
 				//listItems.getItems().add(data.toString()); what should we do here????
+			
 			}); }, ipAddress.getText(), port.getText());
 		
 			//now start the clientConnection client object, this calls the run method 
@@ -109,10 +114,59 @@ public class RPLS extends Application {
 		  
 		    if (clientConnection.isAlive() == false) {}//do something go back to intro scene..send an error message
 		    else {
-		    	 //otherwise switch to next Scene primaryStage.setScene(sceneMap.get(waiting)); or .get(choose)		   
+		    	while (clientConnection.game.has2Players == false) {
+		    		//if there arent two players set the scene to the waiting stage
+		    		primaryStage.setScene(sceneMap.get("waiting"));		    	
 		    	}
+		    	//if there are two players, then go to the choose scene 
+		    	primaryStage.setScene(sceneMap.get("choose"));
+		    	//set the move string to "null" every time you enter the choice scene
+		    	move = "null";	
+		    	
+		    }//end else
 		    
 		});
+		
+		//setting up the Move Buttons//
+		rock.setOnAction(e->{
+			move= "rock";
+			//set the clientMove imageview
+			//clientMove= imageMap.get("rock");
+		});
+		paper.setOnAction(e->{
+			move= "paper";
+			//set the clientMove imageview
+			//clientMove= imageMap.get("rock");
+		});
+		scissors.setOnAction(e->{
+			move= "scissors";
+			//set the clientMove imageview
+			//clientMove= imageMap.get("rock");
+		});
+		lizard.setOnAction(e->{
+			move= "lizard";
+			//set the clientMove imageview
+			//clientMove= imageMap.get("rock");
+		});
+		spock.setOnAction(e->{
+			move= "spock";
+			//set the clientMove imageview
+			//clientMove= imageMap.get("rock");
+		});
+		
+		//make sure the player doesnt send an empty move by disabling the send move button if nothing is chosen
+		if (move == "null") sendMove.setDisable(true);
+		else sendMove.setDisable(false);
+		
+		sendMove.setOnAction(e->{ 
+				clientConnection.send(move);
+				//move on to the next scene 
+				primaryStage.setScene(sceneMap.get("show"));
+				
+				opponentMove= imageMap.get(clientConnection.game.p1Play); //how does this work// should to gameInfo sent from the server just send the opponents move?
+				clientMove = imageMap.get("move");
+		});
+		
 		
 		
 		
@@ -121,7 +175,7 @@ public class RPLS extends Application {
 	
 	TextField port;
 	TextField ipAddress;
-	Button connectToServer, rock, paper, scissors, lizard, spock, playAgain, quit;
+	Button connectToServer, rock, paper, scissors, lizard, spock, playAgain, quit, sendMove;
 	VBox introInputs;
 	Text portText;
 	Text ipAddressText;
@@ -183,6 +237,7 @@ public class RPLS extends Application {
 		endBox = new VBox(winner,endButtons);
 		return new Scene(endBox, 500, 400);
 	}
+	
 
 	
 	

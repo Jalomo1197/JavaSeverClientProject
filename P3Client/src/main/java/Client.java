@@ -50,8 +50,9 @@ public class Client extends Thread{
 		while(true) {
 			 
 			try {
-			String message = in.readObject().toString();
-			callback.accept(message);
+			//cast the input stream to a GameInfo object
+			game = (GameInfo)in.readObject();
+			callback.accept(game);
 			}
 			catch(Exception e) {}
 		}
