@@ -48,19 +48,20 @@ public class Client extends Thread{
 		while(true) {
 			if (opponentPresent == false) {
 				try {
-				//cant read game because the other player isnt connected yet
-				//cast the input stream to a GameInfo object
-				message = in.readObject().toString();//blocking method
-				callback.accept(message);
-				if (message.equals("Opponent has join"))
-					opponentPresent = true;
-					//callback.accept(message);
-					//sceneRequest
-					//out.writeObject("Here in client");
-					sceneRequest.accept(message);
+					//cant read game because the other player isnt connected yet
+					//cast the input stream to a GameInfo object
+					message = in.readObject().toString();//blocking method
+					callback.accept(message);
+					if (message.equals("Opponent has join")){
+						opponentPresent = true;
+						//callback.accept(message);
+						//sceneRequest
+						//out.writeObject("Here in client");
+						sceneRequest.accept(message);
+					}
 				}
 				catch(Exception e) {
-
+					System.out.println("Error in client");
 				}
 			}
 			else{

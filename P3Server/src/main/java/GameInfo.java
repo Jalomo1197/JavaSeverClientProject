@@ -2,7 +2,7 @@ import java.io.Serializable;
 //Server Game Info
 public class GameInfo implements Serializable {
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 	//int playerID;

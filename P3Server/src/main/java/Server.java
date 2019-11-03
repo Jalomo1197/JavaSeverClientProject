@@ -93,7 +93,10 @@ public class Server{
 				callback.accept("client "+ clientNum + " created!");
 				this.connection = s;
 				this.clientNumber = clientNum;
-				this.opponentIndex = -1;
+				if (this.clientNumber == 1)
+					this.opponentIndex = 2;
+				else
+					this.opponentIndex = 1;
 			}
 
 			//when each client joins the server this tells
@@ -123,44 +126,33 @@ public class Server{
 					System.out.println("Streams not open");
 				}
 
-				updateClients("new client on server: \nclient #"+clientNumber);
+				//updateClients("new client on server: \nclient #"+clientNumber);
 
 				 while(true) {
-					    if(presentClients % 2 == 1 && this.opponentIndex == -1){//only one client on server
-					    	if(!informedWait){//sent to client only once, Then client waits for "Opponent has join" to be sent
-					    		try{
-						    		callback.accept("Client "+ clientNumber + " is waiting for opponent...");
-						    		out.writeObject("waiting for opponent...");
-						    		informedWait = true;
-					    		}
-					    		catch(Exception e){
-					    			callback.accept("Something wrong with the socket from \nclient: " + clientNumber + "....closing down!");
-					    			updateClients("Client #"+clientNumber+" has left the server!");
-    					    		clients.set(clientNumber, null);
-    					    		//make and save reusable client numbers
-    					    		reuseNumbers.add(clientNumber);
-    					    		presentClients--;
-    					    		break;
-					    		}
+
+					    if(presentClients < 2){//only one client on server
+					    	try{
+					    		System.out.println(clientNumber);
+						    	if(!informedWait){//sent to client only once, Then client waits for "Opponent has join" to be sent
+							    		callback.accept("Client "+ clientNumber + " is waiting for opponent...");
+							    		out.writeObject("waiting for opponent...");
+							    		informedWait = true;
+						    	}
 					    	}
+				    		catch(Exception e){
+				    			callback.accept("Something wrong with the socket from \nclient: " + clientNumber + "....closing down!");
+				    			updateClients("Client #"+clientNumber+" has left the server!");
+					    		clients.set(clientNumber, null);
+					    		//make and save reusable client numbers
+					    		reuseNumbers.add(clientNumber);
+					    		presentClients--;
+					    		break;
+				    		}
 					    }
 					    else{ //client has a live opponent
     					    try {
     					    	//letting client know to change scene (with NEW consumer on client program);
-
-    					    	if (this.opponentIndex == -1){
-    					    		out.writeObject("Opponent has join");
-    					    		for(ClientThread x : clients) {
-    					    			if (x != null){
-    					    				if (x.opponentIndex == -1 && x.clientNumber != this.clientNumber){
-    					    					this.opponentIndex = x.clientNumber;
-    					    					x.opponentIndex = this.clientNumber;
-    					    					break;
-    					    				}
-    					    			}
-    					    	 	}
-    					    	 	clients.get(this.opponentIndex).out.writeObject("Opponent has join");
-    					    	}
+    					    	out.writeObject("Opponent has join");
 
 
     					    	//check for cycle of three? error check
@@ -175,9 +167,9 @@ public class Server{
     					    	callback.accept("client: " + clientNumber + " sent: " + data);
     					    	updateClients("client #"+clientNumber+" said: "+data);
 
-    					    	}
+    					    }
     					    catch(Exception e) {
-    					    	callback.accept("OOOOPPs...Something wrong with the socket from client: " + clientNumber + "....closing down!");
+    					    	callback.accept("OPPs...Something wrong with the socket from client: " + clientNumber + "....closing down!");
     					    	updateClients("Client #"+clientNumber+" has left the server!");
     					    	//clients.remove(this);
     					    	clients.set(clientNumber, null);
