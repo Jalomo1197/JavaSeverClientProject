@@ -56,8 +56,7 @@ public class RPLS extends Application {
 
 
 		primaryStage.setScene(sceneMap.get("intro"));
-		moveButtons = new HBox(rock, paper, scissors, lizard, spock, sendMove);
-
+		
 		//*************//
 
 		//not sure about the below code..how to handle closing out of the box
@@ -110,6 +109,7 @@ public class RPLS extends Application {
 			    	//{
 			    		//if there arent two players set the scene to the waiting stage
 			    		primaryStage.setScene(sceneMap.get("waiting"));
+			    		
 			    	//}
 			    	//if there are two players, then go to the choose scene
 			    	//primaryStage.setScene(sceneMap.get("choose"));
@@ -212,11 +212,11 @@ public class RPLS extends Application {
 		clientMove = new ImageView();
 		choosePane.setCenter(clientMove);
 		//the Bottoms is an HBox with the move buttons
-		moveButtons = new HBox();
+		moveButtons = new HBox(rock, paper, scissors, lizard, spock, sendMove);
 		choosePane.setBottom(moveButtons);
 		//the right is a ListView with the scores
-		scores = new ListView<String>();
-		choosePane.setRight(scores);
+		//scores = new ListView<String>();
+		choosePane.setRight(information_listView);
 
 		return new Scene(choosePane, 500, 400);
 	}

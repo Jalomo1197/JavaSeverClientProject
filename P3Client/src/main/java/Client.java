@@ -59,23 +59,38 @@ public class Client extends Thread{
 						//out.writeObject("Here in client");
 						sceneRequest.accept(message);
 					}
-				}
+				}//end try
 				catch(Exception e) {
 					System.out.println("Error in client");
 				}
-			}
+			}//end if opponentPresent = false
+			
 			else{
-
 				//stuff
 				//while( both are alive and no winner)
+				
+					try {
+						//accept game object
+						callback.accept(game);
+						
+						
+					}//end try
+					catch(Exception e){
+						//opponentPresent = false; 
+					} //end catch
+					
+				
+					
+				}//end while
+				
 				//start reading game objects
 				//sever should probably send a message befor send game object to show that the other player is still connect
 				//if message ==> true
 				//then read game object?
 			}
-		}
+		}//end run
 
-    }//end run
+  
 
 	//Will our data will be a String for the move?
 	//or will it be a whole game info class object
