@@ -12,75 +12,90 @@ import javafx.scene.control.ListView;
 
 public class Server{
 
-	int count = 1;	
+	int count = 1;
+	int presentClients = 0;
 	ArrayList<ClientThread> clients = new ArrayList<ClientThread>();
+	ArrayList<Integer> reuseNumbers = new ArrayList<Integer>();
 	TheServer server;
 	private Consumer<Serializable> callback;
 	int portNum;
 	GameInfo game = new GameInfo();
-	
-	Server(Consumer<Serializable> call, String port){
-	
+
+	Server(Consumer<Serializable> call, int port){
+
 		callback = call;
 		server = new TheServer();
 		server.start();
-		portNum = Integer.parseInt(port);
+		portNum = port;
 	}
-	
-	
+
+
 	public class TheServer extends Thread{
-		
+		ServerSocket mysocket;
 		public void run() {
-		
-			try(ServerSocket mysocket = new ServerSocket(portNum);){
+
+			try{
+			mysocket = new ServerSocket(portNum);
 		    System.out.println("Server is waiting for a client!");
-			
-		    //while gameInfo.has2players == false 
+
+		    //while gameInfo.has2players == false
 		    //while clients.size() <2
 		    while(true) {
-		    	
-		    	threadCheck();
+
+		    	//threadCheck();
 				ClientThread c = new ClientThread(mysocket.accept(), count);
 				callback.accept("client has connected to server: " + "client #" + count);
-				clients.add(c);
+				Integer zero = 0;
+				if (reuseNumbers.size() != zero){
+					Integer freeNum = reuseNumbers.remove(0);
+					c.clientNumber = freeNum.intValue();
+					clients.add(c.clientNumber, c);
+				}
+				else
+					clients.add(c);
+
 				c.start();
-				
+
 				count++;
-				
+				presentClients++;
+
 			    }
 			}//end of try
 				catch(Exception e) {
 					callback.accept("Server socket did not launch");
 				}
-			
+
 			}//end of while
 		}
-	
+
 		//every time a new thread is added this
-	   //updates the array list checking for threads that are dead 
+	   //updates the array list checking for threads that are dead
 		// removing them from the arrayList
-		public void threadCheck() {
+		/*public void threadCheck() {
 			for (int i =0; i < clients.size(); i++) {
 				ClientThread t = clients.get(i);
 				if (!t.isAlive()) clients.remove(i);
 				//should we also check getState ? if they are runnable/terminated
 			}
-			
-		}//end threadCheck
-		
+
+		}//end threadCheck*/
+
 		class ClientThread extends Thread{
-			
-		
+
+
 			Socket connection;
-			int count;
+			int clientNumber;
+			int opponentIndex;
+			boolean informedWait = false;
 			ObjectInputStream in;
 			ObjectOutputStream out;
-			
-			ClientThread(Socket s, int count){
+
+			ClientThread(Socket s, int clientNum){
 				this.connection = s;
-				this.count = count;	
+				this.clientNumber = clientNum;
+				this.opponentIndex = -1;
 			}
-			
+
 			//when each client joins the server this tells
 			//all other clients there are new clients on the server
 			public void updateClients(String message) {
@@ -92,47 +107,85 @@ public class Server{
 					catch(Exception e) {}
 				}
 			}
-			
+
+
+
 			public void run(){
-					
+
 				try {
 					in = new ObjectInputStream(connection.getInputStream());
 					out = new ObjectOutputStream(connection.getOutputStream());
-					connection.setTcpNoDelay(true);	
+					connection.setTcpNoDelay(true);
 				}
 				catch(Exception e) {
 					System.out.println("Streams not open");
 				}
-				
-				updateClients("new client on server: client #"+count);
-					
+
+				updateClients("new client on server: \nclient #"+clientNumber);
+
 				 while(true) {
-					    try {
-					    	String data = in.readObject().toString();
-					    	//game = in.readObject();
-					    	
-					    	//I think.. the client will just send a string of what choice
-					    	//they are making and the server will send the whole gameInfo object w everything else??? 
-					    	
-					    	callback.accept("client: " + count + " sent: " + data);
-					    	updateClients("client #"+count+" said: "+data);
-					    	
+					    if(presentClients % 2 == 1 && this.opponentIndex == -1){//only one client on server
+					    	if(!informedWait){//sent to client only once, Then client waits for "Opponent has join" to be sent
+					    		try{
+						    		callback.accept(clientNumber + " waiting for opponent...");
+						    		informedWait = true;
+					    		}
+					    		catch(Exception e){
+					    			callback.accept("Something wrong with the socket from \nclient: " + clientNumber + "....closing down!");
+					    			updateClients("Client #"+clientNumber+" has left the server!");
+    					    		clients.remove(this);
+    					    		presentClients--;
+    					    		break;
+					    		}
 					    	}
-					    catch(Exception e) {
-					    	callback.accept("OOOOPPs...Something wrong with the socket from client: " + count + "....closing down!");
-					    	updateClients("Client #"+count+" has left the server!");
-					    	clients.remove(this);
-					    	break;
+					    }
+					    else{ //client has a live opponent
+    					    try {
+    					    	//letting client know to change scene (with NEW consumer on client program);
+    					    	out.writeObject("Opponent has join");
+    					    	if (this.opponentIndex == -1){
+    					    		for(ClientThread x : clients) {
+    					    			if (x != null){
+    					    				if (x.opponentIndex == -1 && x.clientNumber != this.clientNumber){
+    					    					this.opponentIndex = x.clientNumber;
+    					    					x.opponentIndex = this.clientNumber;
+    					    					break;
+    					    				}
+    					    			}
+    					    	 	}
+    					    	}
+    					    	//check for cycle of three? error check
+
+
+    					    	String data = in.readObject().toString();
+    					    	//game = in.readObject();
+
+    					    	//I think.. the client will just send a string of what choice
+    					    	//they are making and the server will send the whole gameInfo object w everything else???
+
+    					    	callback.accept("client: " + clientNumber + " sent: " + data);
+    					    	updateClients("client #"+clientNumber+" said: "+data);
+
+    					    	}
+    					    catch(Exception e) {
+    					    	callback.accept("OOOOPPs...Something wrong with the socket from client: " + clientNumber + "....closing down!");
+    					    	updateClients("Client #"+clientNumber+" has left the server!");
+    					    	//clients.remove(this);
+    					    	clients.set(clientNumber, null);
+    					    	//make and save reusable client numbers
+    					    	reuseNumbers.add(clientNumber);
+    					    	break;
+    					    }
 					    }
 					}
 				}//end of run
-			
-			
+
+
 		}//end of client thread
 }
 
 
-	
-	
 
-	
+
+
+

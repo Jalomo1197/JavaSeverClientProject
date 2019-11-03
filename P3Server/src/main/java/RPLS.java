@@ -9,6 +9,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.stage.Stage;
+import javafx.geometry.VPos;
 
 public class RPLS extends Application {
 	Server serverConnection;
@@ -20,7 +21,7 @@ public class RPLS extends Application {
 
 
 	Button enterPortNumber_btn, turnOnServer_btn;
-	Text gameServer_text, portNumPrompt_text, connectedClients_text, serverInfo_text, winner_text, playing_again;
+	Text gameServer_text, portNumPrompt_text, connectedClients_text, serverInfo_text, winner_text, playing_again, errorMessage;
 	ListView<String> client1_listView;
 	ListView<String> client2_listView;
 
@@ -36,42 +37,79 @@ public class RPLS extends Application {
 		initTextVars();
 		initButtonVars();
 		initOtherVars();
-		
+
 		//set the primary stage as the start up scene
 		primaryStage.setScene(startUpScene());
-		
-		//if the user hasnt entered a port number disable the turnOnServer Button
-		if (portNumber.getText() == null) turnOnServer_btn.setDisable(true);
-		else turnOnServer_btn.setDisable(false);
-	
-		//Event Handler for Turn on Server
-		turnOnServer_btn.setOnAction(e->{serverConnection = new Server(data -> {
-			Platform.runLater(()->{
-				//listItems.getItems().add(data.toString()); what should we do here????
-			}); }, portNumber.getText());
-		
-			if (serverConnection.server.isAlive() == true) {
-				//go to the next stage
-				primaryStage.setScene(infoScene());
-			}
-		
-		});
 
-		
-		primaryStage.setTitle("RPLS!!!");
-		Scene scene = new Scene(new HBox(),600,600);
-		primaryStage.setScene(scene);
+		//Wont work because only runs once
+		//if the user hasnt entered a port number disable the turnOnServer Button
+		//if (portNumber.getText() == null) turnOnServer_btn.setDisable(true);
+		//else turnOnServer_btn.setDisable(false);
+
+		//Event Handler for Turn on Server
+//FIX ME 	turnOnServer.setOnAction
+		//have to adjust to for case: invalid or no port number entered
+		//may need to add a port variable in the server class since not determined until user inputs it
+		turnOnServer_btn.setOnAction(e ->
+									{	if (portNumber.getText().equals("")){
+											//TODO*** we need to let user know textfeild blank, Must enter port number
+											errorMessage.setText("No Port Number: Plese enter port number");
+										}
+										else{
+											int port;
+											try{
+												port = Integer.parseInt(portNumber.getText());
+											}
+											catch(NumberFormatException x){
+												//TODO*** In here we need to let the user know that input was not a vaild number
+												errorMessage.setText("Invalid Port Number: Plese enter valid port number");
+												System.out.println("Error : "+ x.getMessage());
+												//somehow stop control flow of lamda; Maybe by just adding a "return;"
+												return;
+											}
+											//System.out.println("This is an integer " + i);
+
+											//Creating new Server and defining parameter with lamdas
+											serverConnection = new Server
+											(
+												//**Lamda for Consumer<Serializable> call in constructor
+												data ->
+												{
+														Platform.runLater
+														(
+														//**Lamda for Platform.runLater argument
+														()->{
+															client1_listView.getItems().add(data.toString());
+														});
+												}, port);
+											//End of new Server creation, (second parameter is port number)
+											if (serverConnection.server.isAlive() == true) {
+												//go to the next stage
+												primaryStage.setScene(infoScene());
+											}
+										}
+									});
+
+
+		primaryStage.setTitle("RPLS Game Server");
 		primaryStage.show();
 	}
 
 	void initTextVars(){
+		//In CSS, the padding parameters are entered in this order: TOP, RIGHT, BOTTOM, LEFT. Clockwise
 		gameServer_text = new Text("Game Server");
 		portNumPrompt_text = new Text("Enter port number to listen to: ");
 		connectedClients_text = new Text("Number of clients connected: " + 0);
 		serverInfo_text = new Text("Server Information: ");
 		winner_text = new Text("Winner: ");
-		
 		playing_again = new Text("Playing Again ?:" );
+		errorMessage = new Text(" ");
+
+
+		gameServer_text.setTextOrigin(VPos.CENTER);
+
+		//gameServer_text.setLineSpacing(50.0);
+		//gameServer_text.setStyle("-fx-padding: 10 50 0 0;");
 	}
 
 	void initButtonVars(){
@@ -80,22 +118,22 @@ public class RPLS extends Application {
 	}
 
 	void initOtherVars(){
-		portNumber = new TextField("e.g. 5555");
+		portNumber = new TextField();
 		client1_listView= new ListView<String>();
 		client2_listView = new ListView<String>();
 	}
-	
+
 	//initializing the startUpScene
 	public Scene startUpScene() {
 		//this HBox has the port number prompt text and text field
 		subLayoutOne = new HBox(portNumPrompt_text, portNumber);
-		LayoutOne = new VBox(gameServer_text, subLayoutOne, turnOnServer_btn);
-		return new Scene(LayoutOne, 500, 800);
+		LayoutOne = new VBox(gameServer_text, subLayoutOne, turnOnServer_btn, errorMessage);
+		return new Scene(LayoutOne, 600, 500);
 	}
-	
+
 	public Scene infoScene() {
 		clientInfo = new HBox(client1_listView, client2_listView);
-		//this will have who won the previous round 
+		//this will have who won the previous round
 		//and if they are playing again
 		winnerInfo= new HBox(winner_text,playing_again);
 		clientInfo.setSpacing(20);
@@ -105,7 +143,7 @@ public class RPLS extends Application {
 		//set the bottom of the border pane as the winner info hbox
 		serverInfo.setBottom(winnerInfo);
 		serverInfo.setTop(connectedClients_text);
-		return new Scene(serverInfo, 500, 800);
+		return new Scene(serverInfo, 800, 800);
 	//	return new Scene();
 	}
 
