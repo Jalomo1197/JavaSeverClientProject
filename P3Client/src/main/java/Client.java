@@ -27,6 +27,8 @@ public class Client extends Thread{
 		this.sceneRequest = sceneRequest;
 	}
 
+
+
 	public void run() {
 		Socket socketClient;
 		String message;
@@ -52,9 +54,9 @@ public class Client extends Thread{
 				callback.accept(message);
 				if (message.equals("Opponent has join"))
 					opponentPresent = true;
-					callback.accept(message);
+					//callback.accept(message);
 					//sceneRequest
-					out.writeObject("Here in client");
+					//out.writeObject("Here in client");
 					sceneRequest.accept(message);
 				}
 				catch(Exception e) {
@@ -62,6 +64,7 @@ public class Client extends Thread{
 				}
 			}
 			else{
+
 				//stuff
 				//while( both are alive and no winner)
 				//start reading game objects

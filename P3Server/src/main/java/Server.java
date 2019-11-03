@@ -27,6 +27,7 @@ public class Server{
 		server = new TheServer();
 		server.start();
 		portNum = port;
+		clients.add(null);
 	}
 
 
@@ -36,7 +37,7 @@ public class Server{
 
 			try{
 			mysocket = new ServerSocket(portNum);
-		    System.out.println("Server is waiting for a client!");
+		    System.out.println("Server is waiting for a clients!");
 
 		    //while gameInfo.has2players == false
 		    //while clients.size() <2
@@ -45,20 +46,18 @@ public class Server{
 		    	//threadCheck();
 				ClientThread c = new ClientThread(mysocket.accept(), count);
 				callback.accept("client has connected to server: " + "client #" + count);
-				Integer zero = 0;
-				if (reuseNumbers.size() != zero){
+
+				if (reuseNumbers.size() != 0){
 					Integer freeNum = reuseNumbers.remove(0);
 					c.clientNumber = freeNum.intValue();
 					clients.add(c.clientNumber, c);
 				}
-				else
+				else{
 					clients.add(c);
-
-				c.start();
-
-				count++;
+					count++;
+				}
 				presentClients++;
-
+				c.start();
 			    }
 			}//end of try
 				catch(Exception e) {
@@ -91,6 +90,7 @@ public class Server{
 			ObjectOutputStream out;
 
 			ClientThread(Socket s, int clientNum){
+				callback.accept("client "+ clientNum + " created!");
 				this.connection = s;
 				this.clientNumber = clientNum;
 				this.opponentIndex = -1;
@@ -107,6 +107,8 @@ public class Server{
 					catch(Exception e) {}
 				}
 			}
+
+			//public void updateClientsEnemy(Game obj)
 
 
 
@@ -127,13 +129,16 @@ public class Server{
 					    if(presentClients % 2 == 1 && this.opponentIndex == -1){//only one client on server
 					    	if(!informedWait){//sent to client only once, Then client waits for "Opponent has join" to be sent
 					    		try{
-						    		callback.accept(clientNumber + " waiting for opponent...");
+						    		callback.accept("Client "+ clientNumber + " is waiting for opponent...");
+						    		out.writeObject("waiting for opponent...");
 						    		informedWait = true;
 					    		}
 					    		catch(Exception e){
 					    			callback.accept("Something wrong with the socket from \nclient: " + clientNumber + "....closing down!");
 					    			updateClients("Client #"+clientNumber+" has left the server!");
-    					    		clients.remove(this);
+    					    		clients.set(clientNumber, null);
+    					    		//make and save reusable client numbers
+    					    		reuseNumbers.add(clientNumber);
     					    		presentClients--;
     					    		break;
 					    		}
@@ -142,8 +147,9 @@ public class Server{
 					    else{ //client has a live opponent
     					    try {
     					    	//letting client know to change scene (with NEW consumer on client program);
-    					    	out.writeObject("Opponent has join");
+
     					    	if (this.opponentIndex == -1){
+    					    		out.writeObject("Opponent has join");
     					    		for(ClientThread x : clients) {
     					    			if (x != null){
     					    				if (x.opponentIndex == -1 && x.clientNumber != this.clientNumber){
@@ -153,10 +159,13 @@ public class Server{
     					    				}
     					    			}
     					    	 	}
+    					    	 	clients.get(this.opponentIndex).out.writeObject("Opponent has join");
     					    	}
+
+
     					    	//check for cycle of three? error check
 
-
+    					    	callback.accept("client "+ clientNumber + " waiting for read from connection");
     					    	String data = in.readObject().toString();
     					    	//game = in.readObject();
 
