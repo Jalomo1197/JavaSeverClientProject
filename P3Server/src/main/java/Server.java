@@ -133,9 +133,9 @@ public class Server{
 				 while(true) {
 				 	//NOTES FOR HANA, dont highlight and delete lol.
 				 	//**********************************************************************************************
-					/*	•First client thread was the one getting stuck in lines 143-157.
+					/*	•First client thread was the one getting stuck in lines 151-166.
 					*
-					*	•Client class on users side was not updating scene because we never send "Opponent has join"
+					*	•Client (client 1) class on users side was not updating scene because we never send "Opponent has join"
 					*		FIX: This sub issue fixed by making 'boolean informedJoined' a member of the sever class
 					*			 instead of the clientthread class. Now either the first or second client thread can
 					*			 send that message to both clients once. IN THIS CASE the second client thread is
@@ -144,7 +144,7 @@ public class Server{
 					*
 					*	Ideas:
 					*		• making boolean informedWait a member of the server too? (probably not it cheif)
-					*		•
+					*		• instead of if make it a while (presentClients < 2)
 					*/
 					//**********************************************************************************************
 
