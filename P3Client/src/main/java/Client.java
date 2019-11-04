@@ -44,7 +44,7 @@ public class Client extends Thread{
 			socketClient.setTcpNoDelay(true);
 		}
 		catch(Exception e) {
-		//callback.accept("Server socket did not launch");
+		    callback.accept("Client socket did not launch");
 		}
 
 		while(true) {
@@ -58,7 +58,7 @@ public class Client extends Thread{
 					System.out.println("Cannot read Info from server.");
 				}
 
-				message = game.message;//blocking method
+				message = game.message;
 				callback.accept(message);
 				if (message.equals("Opponent has join")){
 					opponentPresent = true;
@@ -79,7 +79,7 @@ public class Client extends Thread{
 
 					}//end try
 					catch(Exception e){
-						//opponentPresent = false;
+						System.out.println("Cannot read Info from opponent.");
 					} //end catch
 
 

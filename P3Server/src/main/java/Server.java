@@ -131,47 +131,66 @@ public class Server{
 				//updateClients("new client on server: \nclient #"+clientNumber);
 
 				 while(true) {
+				 	//NOTES FOR HANA, dont highlight and delete lol.
+				 	//**********************************************************************************************
+					/*	•First client thread was the one getting stuck in lines 143-157.
+					*
+					*	•Client class on users side was not updating scene because we never send "Opponent has join"
+					*		FIX: This sub issue fixed by making 'boolean informedJoined' a member of the sever class
+					*			 instead of the clientthread class. Now either the first or second client thread can
+					*			 send that message to both clients once. IN THIS CASE the second client thread is
+					*			 sending it to both because first thread stuck.
+					*    			Notes: so we know the client classes are working okay, strongly assuming the problem is here.
+					*
+					*	Ideas:
+					*		• making boolean informedWait a member of the server too? (probably not it cheif)
+					*		•
+					*/
+					//**********************************************************************************************
 
-					    if(presentClients < 2){//only one client on server
-					    	if(informedWait == false){
-					    		informedWait = true;
-					    		callback.accept("Client "+ clientNumber + " is waiting for opponent...");
-					    		game.message = "waiting for opponent...";
-					    		try{
-					    			out.writeObject(game);
-					    		}
-					    		catch(Exception e){
-					    			callback.accept("Could not send info to Client " + clientNumber +". Shutting connection down");
-					    			clients.set(clientNumber, null);
-					    			reuseNumbers.add(clientNumber);
-						    		presentClients--;
-						    		break;
-					    		}
-					    	}
-
-
-
-					    	/*try{
-					    		//System.out.println(clientNumber);
-						    	if(!informedWait){//sent to client only once, Then client waits for "Opponent has join" to be sent
-							    		callback.accept("Client "+ clientNumber + " is waiting for opponent...");
-							    		game.message = "waiting for opponent...";
-							    		out.writeObject(game);
-							    		informedWait = true;
-						    	}
-                               game.message = "Opponent has join";
-						    	out.writeObject(game);
-					    	}
-				    		catch(Exception e){
-				    			callback.accept("Something wrong with the socket from \nclient: " + clientNumber + "....closing down!");
-				    			updateClients("Client #"+clientNumber+" has left the server!");
-					    		clients.set(clientNumber, null);
-					    		//make and save reusable client numbers
-					    		reuseNumbers.add(clientNumber);
+				    if(presentClients < 2){	//only one client on server
+				    	if(informedWait == false){
+				    		informedWait = true;
+				    		callback.accept("Client "+ clientNumber + " is waiting for opponent..."); //first thread does get this far
+				    		game.message = "waiting for opponent...";
+				    		try{
+				    			out.writeObject(game);
+				    		}
+				    		catch(Exception e){ //first thread does not cause exception
+				    			callback.accept("Could not send info to Client " + clientNumber +". Shutting connection down");
+				    			clients.set(clientNumber, null);
+				    			reuseNumbers.add(clientNumber);
 					    		presentClients--;
 					    		break;
-				    		}*/
+				    		}
+				    	}
+				    	//old code, too scared to delete because hana yells at me.
+				    	/*try{
+				    		//System.out.println(clientNumber);
+					    	if(!informedWait){//sent to client only once, Then client waits for "Opponent has join" to be sent
+						    		callback.accept("Client "+ clientNumber + " is waiting for opponent...");
+						    		game.message = "waiting for opponent...";
+						    		out.writeObject(game);
+						    		informedWait = true;
+					    	}
+                           game.message = "Opponent has join";
+					    	out.writeObject(game);
+				    	}
+			    		catch(Exception e){
+			    			callback.accept("Something wrong with the socket from \nclient: " + clientNumber + "....closing down!");
+			    			updateClients("Client #"+clientNumber+" has left the server!");
+				    		clients.set(clientNumber, null);
+				    		//make and save reusable client numbers
+				    		reuseNumbers.add(clientNumber);
+				    		presentClients--;
+				    		break;
+			    		}*/
 					    }
+
+					    /*
+					    *	CURRENTLY ONLY SECOND THREAD IS IN THE ELSE BELOW, and second client DOES get the first clients 'move' form the first client using
+					    *	the send function. Need to figure out why first client thread isnt reaching here ): #sad
+						*/
 					    else{ //client has a live opponent
     					    try {
     					    	//letting client know to change scene (with NEW consumer on client program);
