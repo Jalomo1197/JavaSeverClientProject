@@ -28,7 +28,9 @@ public class Server{
 		server = new TheServer();
 		server.start();
 		portNum = port;
-		clients.add(null);
+		//clients.add(null);
+		reuseNumbers.add(1);
+		reuseNumbers.add(2);
 	}
 
 
@@ -42,9 +44,19 @@ public class Server{
 
 		    //while gameInfo.has2players == false
 		    //while clients.size() <2
-		    while(true) {
-
-		    	//threadCheck();
+		   // while(true) {
+		    while(reuseNumbers.size()>0) {
+		    	
+		    	if (reuseNumbers.size()>2) System.out.println("Something is wrong with reuse numbers");
+		    	threadCheck();
+		    	ClientThread c = new ClientThread(mysocket.accept(), reuseNumbers.get(0));
+		    	reuseNumbers.remove(0);
+		    	clients.add(c);
+		    	System.out.println("Numbers of clients in clientThread arraylist" + clients.size());
+		    	presentClients++;
+		    	System.out.println("Number of present Clients" + presentClients);
+				c.start();
+		    	/*
 				ClientThread c = new ClientThread(mysocket.accept(), count);
 				callback.accept("client has connected to server: " + "client #" + count);
 
@@ -59,26 +71,38 @@ public class Server{
 				}
 				presentClients++;
 				c.start();
-			    }
+				
+				*/
+			    } //end while 
+		    
 			}//end of try
 				catch(Exception e) {
 					callback.accept("Server socket did not launch");
-				}
+				}//end catch
 
-			}//end of while
-		}
+			}//end of run
+		
 
 		//every time a new thread is added this
 	   //updates the array list checking for threads that are dead
 		// removing them from the arrayList
-		/*public void threadCheck() {
+		public void threadCheck() {
 			for (int i =0; i < clients.size(); i++) {
 				ClientThread t = clients.get(i);
-				if (!t.isAlive()) clients.remove(i);
+				if (!t.isAlive() ) {
+				
+					reuseNumbers.add(t.clientNumber);
+					System.out.println("adding " + t.clientNumber + "to reuse Numbers");
+					clients.remove(t);
+				
+				} //end if
+	
 				//should we also check getState ? if they are runnable/terminated
 			}
 
 		}//end threadCheck*/
+		
+	}//end TheServer Class
 
 		class ClientThread extends Thread{
 
@@ -126,7 +150,7 @@ public class Server{
 				}
 				catch(Exception e) {
 					System.out.println("Streams not open");
-				}
+				}fdsa
 
 				//updateClients("new client on server: \nclient #"+clientNumber);
 
@@ -150,7 +174,7 @@ public class Server{
 
 				    if(presentClients < 2){	//only one client on server
 				    	if(informedWait == false){
-				    		informedWait = true;
+				    		informedWait = true;dsaf
 				    		callback.accept("Client "+ clientNumber + " is waiting for opponent..."); //first thread does get this far
 				    		game.message = "waiting for opponent...";
 				    		try{
@@ -228,14 +252,18 @@ public class Server{
     					    	//make and save reusable client numbers
     					    	reuseNumbers.add(clientNumber);
     					    	break;
-    					    }
-					    }
+    					    } //end catch
+					    }//end else 
 					}
 				}//end of run
 
 
 		}//end of client thread
 }
+cds
+
+
+
 
 
 
