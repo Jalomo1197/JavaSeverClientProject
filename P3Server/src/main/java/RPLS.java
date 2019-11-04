@@ -10,6 +10,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.stage.Stage;
 import javafx.geometry.VPos;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+
 
 public class RPLS extends Application {
 	Server serverConnection;
@@ -23,7 +26,7 @@ public class RPLS extends Application {
 	Button enterPortNumber_btn, turnOnServer_btn;
 	Text gameServer_text, portNumPrompt_text, connectedClients_text, serverInfo_text, winner_text, playing_again, errorMessage;
 	ListView<String> client1_listView;
-	ListView<String> client2_listView;
+
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -80,6 +83,7 @@ public class RPLS extends Application {
 														//**Lamda for Platform.runLater argument
 														()->{
 															client1_listView.getItems().add(data.toString());
+															connectedClients_text.setText("Number of clients connected: " + serverConnection.presentClients);
 														});
 												}, port);
 											//End of new Server creation, (second parameter is port number)
@@ -100,9 +104,12 @@ public class RPLS extends Application {
 		gameServer_text = new Text("Game Server");
 		portNumPrompt_text = new Text("Enter port number to listen to: ");
 		connectedClients_text = new Text("Number of clients connected: " + 0);
+		connectedClients_text.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
 		serverInfo_text = new Text("Server Information: ");
 		winner_text = new Text("Winner: ");
+		winner_text.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
 		playing_again = new Text("Playing Again ?:" );
+		playing_again.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
 		errorMessage = new Text(" ");
 
 
@@ -120,7 +127,6 @@ public class RPLS extends Application {
 	void initOtherVars(){
 		portNumber = new TextField();
 		client1_listView= new ListView<String>();
-		client2_listView = new ListView<String>();
 	}
 
 	//initializing the startUpScene
@@ -132,7 +138,7 @@ public class RPLS extends Application {
 	}
 
 	public Scene infoScene() {
-		clientInfo = new HBox(client1_listView, client2_listView);
+		clientInfo = new HBox(client1_listView);
 		//this will have who won the previous round
 		//and if they are playing again
 		winnerInfo= new HBox(winner_text,playing_again);

@@ -14,6 +14,7 @@ public class Server{
 
 	int count = 1;
 	int presentClients = 0;
+	boolean informedJoined = false;
 	ArrayList<ClientThread> clients = new ArrayList<ClientThread>();
 	ArrayList<Integer> reuseNumbers = new ArrayList<Integer>();
 	TheServer server;
@@ -86,17 +87,18 @@ public class Server{
 			int clientNumber;
 			int opponentIndex;
 			boolean informedWait = false;
+			GameInfo game;
 			ObjectInputStream in;
 			ObjectOutputStream out;
 
 			ClientThread(Socket s, int clientNum){
-				callback.accept("client "+ clientNum + " created!");
 				this.connection = s;
 				this.clientNumber = clientNum;
 				if (this.clientNumber == 1)
 					this.opponentIndex = 2;
 				else
 					this.opponentIndex = 1;
+				game = new GameInfo();
 			}
 
 			//when each client joins the server this tells
@@ -131,13 +133,34 @@ public class Server{
 				 while(true) {
 
 					    if(presentClients < 2){//only one client on server
-					    	try{
-					    		System.out.println(clientNumber);
+					    	if(informedWait == false){
+					    		informedWait = true;
+					    		callback.accept("Client "+ clientNumber + " is waiting for opponent...");
+					    		game.message = "waiting for opponent...";
+					    		try{
+					    			out.writeObject(game);
+					    		}
+					    		catch(Exception e){
+					    			callback.accept("Could not send info to Client " + clientNumber +". Shutting connection down");
+					    			clients.set(clientNumber, null);
+					    			reuseNumbers.add(clientNumber);
+						    		presentClients--;
+						    		break;
+					    		}
+					    	}
+
+
+
+					    	/*try{
+					    		//System.out.println(clientNumber);
 						    	if(!informedWait){//sent to client only once, Then client waits for "Opponent has join" to be sent
 							    		callback.accept("Client "+ clientNumber + " is waiting for opponent...");
-							    		out.writeObject("waiting for opponent...");
+							    		game.message = "waiting for opponent...";
+							    		out.writeObject(game);
 							    		informedWait = true;
 						    	}
+                               game.message = "Opponent has join";
+						    	out.writeObject(game);
 					    	}
 				    		catch(Exception e){
 				    			callback.accept("Something wrong with the socket from \nclient: " + clientNumber + "....closing down!");
@@ -147,25 +170,34 @@ public class Server{
 					    		reuseNumbers.add(clientNumber);
 					    		presentClients--;
 					    		break;
-				    		}
+				    		}*/
 					    }
 					    else{ //client has a live opponent
     					    try {
     					    	//letting client know to change scene (with NEW consumer on client program);
-    					    	out.writeObject("Opponent has join");
+    					    	if (!informedJoined){
+    					    		game.message = "Opponent has join";
+    					    		out.writeObject(game);
+    					    		clients.get(this.opponentIndex).out.writeObject(game);
+    					    		informedJoined = true;
+    					    	}
+
 
 
     					    	//check for cycle of three? error check
 
     					    	callback.accept("client "+ clientNumber + " waiting for read from connection");
-    					    	String data = in.readObject().toString();
+    					    	game = (GameInfo)in.readObject();
+    					    	clients.get(opponentIndex).out.writeObject(game);
     					    	//game = in.readObject();
 
     					    	//I think.. the client will just send a string of what choice
     					    	//they are making and the server will send the whole gameInfo object w everything else???
 
-    					    	callback.accept("client: " + clientNumber + " sent: " + data);
-    					    	updateClients("client #"+clientNumber+" said: "+data);
+    					    	callback.accept("client: " + clientNumber + " selected: " + game.message);
+
+    					    	game = (GameInfo)in.readObject();
+    					    	//updateClients("client #"+clientNumber+" said: "+data);
 
     					    }
     					    catch(Exception e) {
@@ -173,6 +205,7 @@ public class Server{
     					    	updateClients("Client #"+clientNumber+" has left the server!");
     					    	//clients.remove(this);
     					    	clients.set(clientNumber, null);
+    					    	presentClients--;
     					    	//make and save reusable client numbers
     					    	reuseNumbers.add(clientNumber);
     					    	break;

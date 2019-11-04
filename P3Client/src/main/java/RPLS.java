@@ -21,6 +21,7 @@ import javafx.scene.image.Image;
 public class RPLS extends Application {
 	Client clientConnection;
 	ListView<String> information_listView;
+
 	//this hashmap will have all of the scenes
 	//denoted by a string
 	//intro//waiting//choose//show//end
@@ -31,6 +32,7 @@ public class RPLS extends Application {
 	//rock//paper//scissors//lizzard//spock
 	HashMap<String, ImageView> imageMap;
 	String move;
+	String oppMove;
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -54,8 +56,8 @@ public class RPLS extends Application {
 				}
 				for (String x : validMoves){
 					if(message.equals(x)){
-						opponentMove.setImage(new Image("file:src/test/resources/"+message+".jpg", 150, 150, false, false))
 						information_listView.getItems().add("Opponent has selected!");
+						opponentMove.setImage(new Image("file:src/test/resources/"+x+".jpg", 150, 150, false, false));
 						break;
 					}
 				}
@@ -119,6 +121,7 @@ public class RPLS extends Application {
 			    	//{
 			    		//if there arent two players set the scene to the waiting stage
 			    		primaryStage.setScene(sceneMap.get("waiting"));
+
 			    	//}
 			    	//if there are two players, then go to the choose scene
 			    	//primaryStage.setScene(sceneMap.get("choose"));
@@ -157,8 +160,8 @@ public class RPLS extends Application {
 		});
 
 		//make sure the player doesnt send an empty move by disabling the send move button if nothing is chosen
-		if (move == "null") sendMove.setDisable(true);
-		else sendMove.setDisable(false);
+		//if (move == "null") sendMove.setDisable(true);
+		//else sendMove.setDisable(false);
 
 		sendMove.setOnAction(e->{
 				clientConnection.send(move);

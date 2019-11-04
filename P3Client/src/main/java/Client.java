@@ -16,7 +16,7 @@ public class Client extends Thread{
 	//initialized in constructor for Client
 	int portNum;
 	String ipAddress;
-	boolean opponentPresent = false;
+	boolean opponentPresent;
 	private Consumer<Serializable> callback;
 	private Consumer<String> sceneRequest;
 
@@ -25,13 +25,15 @@ public class Client extends Thread{
 		portNum = Integer.parseInt(port);
 		callback = call;
 		this.sceneRequest = sceneRequest;
+		game = new GameInfo();
+		opponentPresent  = false;
 	}
 
 
 
 	public void run() {
 		Socket socketClient;
-		String message;
+		String message = " ";
 		//creating a new socket with the user entered ip/port address
 		//inside the try black so that any exceptions are caught in the catch frame
 		try{
@@ -48,41 +50,57 @@ public class Client extends Thread{
 		while(true) {
 			if (opponentPresent == false) {
 				try {
-					//cant read game because the other player isnt connected yet
-					//cast the input stream to a GameInfo object
-					message = in.readObject().toString();//blocking method
-					callback.accept(message);
-					if (message.equals("Opponent has join")){
-						opponentPresent = true;
-						//callback.accept(message);
-						//sceneRequest
-						//out.writeObject("Here in client");
-						sceneRequest.accept(message);
-					}
+					game = (GameInfo)in.readObject();
+					if(game == null)
+						System.out.println("fuck");
 				}
 				catch(Exception e) {
-					System.out.println("Error in client");
+					System.out.println("Cannot read Info from server.");
 				}
-			}
-			else{
 
+				message = game.message;//blocking method
+				callback.accept(message);
+				if (message.equals("Opponent has join")){
+					opponentPresent = true;
+					sceneRequest.accept(message);
+				}
+			}//end if opponentPresent = false
+
+			else{
 				//stuff
 				//while( both are alive and no winner)
+
+					try {
+						//accept game object
+						game = (GameInfo)in.readObject();
+						sceneRequest.accept(game.message);
+						//message = in.readObject().toString();
+
+
+					}//end try
+					catch(Exception e){
+						//opponentPresent = false;
+					} //end catch
+
+
+
+				}//end while
+
 				//start reading game objects
 				//sever should probably send a message befor send game object to show that the other player is still connect
 				//if message ==> true
 				//then read game object?
 			}
-		}
+		}//end run
 
-    }//end run
+
 
 	//Will our data will be a String for the move?
 	//or will it be a whole game info class object
 	public void send(String data) {
-
+		game.message = data;
 		try {
-			out.writeObject(data);
+			out.writeObject(game);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
