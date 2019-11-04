@@ -1,6 +1,6 @@
 import java.beans.EventHandler;
 import java.util.HashMap;
-
+import java.util.ArrayList;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -15,6 +15,8 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import java.util.function.Consumer;
+import javafx.scene.image.Image;
+
 
 public class RPLS extends Application {
 	Client clientConnection;
@@ -24,6 +26,7 @@ public class RPLS extends Application {
 	//intro//waiting//choose//show//end
 	HashMap<String, Scene> sceneMap;
 	Consumer<String> sceneRequest;
+	ArrayList<String> validMoves;
 	//this hashmap will have all the images for the moves denoted by a string
 	//rock//paper//scissors//lizzard//spock
 	HashMap<String, ImageView> imageMap;
@@ -49,6 +52,13 @@ public class RPLS extends Application {
 					primaryStage.setScene(sceneMap.get("choose"));
 					primaryStage.show();
 				}
+				for (String x : validMoves){
+					if(message.equals(x)){
+						opponentMove.setImage(new Image("file:src/test/resources/"+message+".jpg", 150, 150, false, false))
+						information_listView.getItems().add("Opponent has selected!");
+						break;
+					}
+				}
 
 				//
 			});
@@ -56,7 +66,6 @@ public class RPLS extends Application {
 
 
 		primaryStage.setScene(sceneMap.get("intro"));
-		moveButtons = new HBox(rock, paper, scissors, lizard, spock, sendMove);
 
 		//*************//
 
@@ -154,10 +163,15 @@ public class RPLS extends Application {
 		sendMove.setOnAction(e->{
 				clientConnection.send(move);
 				//move on to the next scene
+				moveImageBox = new HBox(clientMove, opponentMove);
+				showPane.setCenter(moveImageBox);
+				showPane.setRight(information_listView);
+				information_listView.getItems().add("Waiting for opponent to make move.");
+				clientMove.setImage(new Image("file:src/test/resources/"+move+".jpg", 150, 150, false, false));
 				primaryStage.setScene(sceneMap.get("show"));
 
-				opponentMove= imageMap.get(clientConnection.game.p1Play); //how does this work// should to gameInfo sent from the server just send the opponents move?
-				clientMove = imageMap.get("move");
+				//opponentMove= imageMap.get(clientConnection.game.p1Play); //how does this work// should to gameInfo sent from the server just send the opponents move?
+				//clientMove = imageMap.get("move");
 		});
 
 
@@ -169,7 +183,7 @@ public class RPLS extends Application {
 	TextField port, ipAddress;
 	Button connectToServer, rock, paper, scissors, lizard, spock, playAgain, quit, sendMove;
 	VBox introInputs;
-	Text portText, ipAddressText, winner, errorMessage;
+	Text portText, ipAddressText, winner, errorMessage, yourPick_text, oppPick_text;
 	HBox waitingBox, moveButtons, moveImageBox;
 	Text waiting; //for the waiting scene
 	ListView<String> scores; //this will go in the choose and show scenes
@@ -196,7 +210,7 @@ public class RPLS extends Application {
 		introInputs = new VBox(portText, port, ipAddressText, ipAddress, connectToServer, errorMessage);
 		//this is to set padding between the items in the vbox
 		introInputs.setSpacing(5);
-		return new Scene(introInputs, 500, 400);
+		return new Scene(introInputs, 400, 400);
 	}
 
 	public Scene createWaitingScene() {
@@ -210,25 +224,29 @@ public class RPLS extends Application {
 		choosePane = new BorderPane();
 		//the center will be an imageView
 		clientMove = new ImageView();
-		choosePane.setCenter(clientMove);
+		choosePane.setCenter(clientMove); //*************HAVE TO RESET IN EVENT HANDLER
 		//the Bottoms is an HBox with the move buttons
-		moveButtons = new HBox();
+		moveButtons = new HBox(rock, paper, scissors, lizard, spock, sendMove);
 		choosePane.setBottom(moveButtons);
 		//the right is a ListView with the scores
-		scores = new ListView<String>();
-		choosePane.setRight(scores);
+		choosePane.setRight(information_listView);
 
-		return new Scene(choosePane, 500, 400);
+		return new Scene(choosePane, 600, 600);
 	}
 
 	public Scene createShowScene() {
 		//this is an HBox with a view of both moves
-		moveImageBox = new HBox(clientMove, opponentMove);
+		//moveImageBox = new HBox(clientMove, opponentMove);
 		showPane = new BorderPane();
-		showPane.setCenter(moveImageBox);
+
+		HBox clientDisplay = new HBox(yourPick_text, clientMove);
+		HBox opponentDisplay = new HBox(oppPick_text, opponentMove);
+		VBox gD =new VBox(clientDisplay,opponentDisplay);
+		showPane.setLeft(gD);
+		//showPane.setCenter(moveImageBox);
 		//the right is a ListView with the scores
-		showPane.setRight(scores);
-		return new Scene(showPane, 500, 400);
+		//showPane.setRight();
+		return new Scene(showPane, 600, 600);
 	}
 
 	public Scene createEndScene() {
@@ -236,7 +254,7 @@ public class RPLS extends Application {
 		endButtons = new HBox(playAgain, quit);
 		//this vBox has the winning text and the buttons
 		endBox = new VBox(winner,endButtons);
-		return new Scene(endBox, 500, 400);
+		return new Scene(endBox, 600, 600);
 	}
 
 	public void createTextObjects(){
@@ -247,6 +265,8 @@ public class RPLS extends Application {
 		waiting = new Text("Waiting for Another Player...");
 		errorMessage = new Text("");
 		winner = new Text("");
+		yourPick_text = new Text("\n\n	You: ");
+		oppPick_text = new Text("\n\n\n\n	Opponent: ");
 		move = new String();
 		information_listView = new ListView<String>();
 	}
@@ -255,15 +275,28 @@ public class RPLS extends Application {
 		//for choose scene
 		//buttons for the image moves.. we will but image views inside these buttons
 		//using .setGraphic()
-		rock = new Button("rock");
-		paper = new Button("paper");
-		scissors = new Button("scissors");
-		lizard = new Button("lizard");
-		spock = new Button("spock");
+		rock = new Button();
+		paper = new Button();
+		scissors = new Button();
+		lizard = new Button();
+		spock = new Button();
+		rock.setGraphic(new ImageView(new Image("file:src/test/resources/rock.jpg", 90, 90, false, false)));
+		paper.setGraphic(new ImageView(new Image("file:src/test/resources/paper.jpg", 90, 90, false, false)));
+		scissors.setGraphic(new ImageView(new Image("file:src/test/resources/scissors.jpg", 90, 90, false, false)));
+		spock.setGraphic(new ImageView(new Image("file:src/test/resources/spock.jpg", 90, 90, false, false)));
+		lizard.setGraphic(new ImageView(new Image("file:src/test/resources/lizard.jpg", 90, 90, false, false)));
+
+
 		sendMove = new Button("Send Move");
 		playAgain = new Button("PLAY AGAIN");
 		quit = new Button("QUIT");
 		connectToServer = new Button("Connect To Server");
+		validMoves = new ArrayList<>();
+		validMoves.add("rock");
+		validMoves.add("paper");
+		validMoves.add("scissors");
+		validMoves.add("lizard");
+		validMoves.add("spock");
 		//moveButtons
 	}
 }
