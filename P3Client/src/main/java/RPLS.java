@@ -30,7 +30,7 @@ public class RPLS extends Application {
 	ArrayList<String> validMoves;
 	//this hashmap will have all the images for the moves denoted by a string
 	//rock//paper//scissors//lizzard//spock
-	HashMap<String, ImageView> imageMap;
+	HashMap<String, Image> imageMap;
 	String move;
 	String oppMove;
 
@@ -47,20 +47,41 @@ public class RPLS extends Application {
 		createTextObjects();
 		createButtonObjects();
 		createSceneMap();
+		createImageMap();
 
 		sceneRequest = message -> {
+			
 			Platform.runLater(()->{
 				if (message.equals("Opponent has join")){
 					primaryStage.setScene(sceneMap.get("choose"));
 					primaryStage.show();
+					//idk about this. 
+					//clientConnection.send(true);
 				}
-				for (String x : validMoves){
-					if(message.equals(x)){
-						information_listView.getItems().add("Opponent has selected!");
-						opponentMove.setImage(new Image("file:src/test/resources/"+x+".jpg", 150, 150, false, false));
-						break;
-					}
+				
+				if (message.equals("Opponent has left")) {
+					primaryStage.setScene(sceneMap.get("waiting"));
+					primaryStage.show();
 				}
+				if (message.equals("Moves made")) {
+					information_listView.getItems().add("Opponent has selected!");
+					opponentMove.setImage(imageMap.get(clientConnection.opponentMove));
+					
+					primaryStage.setScene(sceneMap.get("show"));
+					
+				}
+				if (message.equals("end")) {
+					primaryStage.setScene(sceneMap.get("end"));
+					primaryStage.show();
+				}
+				
+				if (message.equals("choose")) {
+					primaryStage.setScene(sceneMap.get("choose"));
+					primaryStage.show();
+					
+				}
+				
+				
 
 				//
 			});
@@ -113,15 +134,20 @@ public class RPLS extends Application {
 				//now start the clientConnection client object, this calls the run method
 			    clientConnection.start();
 
-			    if (clientConnection.isAlive() == false)
-			    {}//do something go back to intro scene..send an error message
-			    else
-			    {
-			    	//while (clientConnection.game.has2Players == false)
+			  //  if (clientConnection.isAlive() == false)
+			   // {}//do something go back to intro scene..send an error message
+			   
+			    
+			     //if (clientConnection.opponentPresent == false) {
 			    	//{
 			    		//if there arent two players set the scene to the waiting stage
+			    		
 			    		primaryStage.setScene(sceneMap.get("waiting"));
-
+			     //}
+			     
+			     
+			     //primaryStage.setScene(sceneMap.get("choose"));
+			
 			    	//}
 			    	//if there are two players, then go to the choose scene
 			    	//primaryStage.setScene(sceneMap.get("choose"));
@@ -129,34 +155,34 @@ public class RPLS extends Application {
 			    	//move = "null";
 
 			    }//end inner else
-			}//end else
+			//}//end else
 		});
 
 		//setting up the Move Buttons//
 		rock.setOnAction(e->{
 			move= "rock";
 			//set the clientMove imageview
-			//clientMove= imageMap.get("rock");
+			clientMove.setImage(imageMap.get("rock"));
 		});
 		paper.setOnAction(e->{
 			move= "paper";
 			//set the clientMove imageview
-			//clientMove= imageMap.get("rock");
+			clientMove.setImage(imageMap.get("paper"));
 		});
 		scissors.setOnAction(e->{
 			move= "scissors";
 			//set the clientMove imageview
-			//clientMove= imageMap.get("rock");
+			clientMove.setImage(imageMap.get("scissors"));
 		});
 		lizard.setOnAction(e->{
 			move= "lizard";
 			//set the clientMove imageview
-			//clientMove= imageMap.get("rock");
+			clientMove.setImage(imageMap.get("lizard"));
 		});
 		spock.setOnAction(e->{
 			move= "spock";
 			//set the clientMove imageview
-			//clientMove= imageMap.get("rock");
+			clientMove.setImage(imageMap.get("spock"));
 		});
 
 		//make sure the player doesnt send an empty move by disabling the send move button if nothing is chosen
@@ -164,17 +190,33 @@ public class RPLS extends Application {
 		//else sendMove.setDisable(false);
 
 		sendMove.setOnAction(e->{
+			
 				clientConnection.send(move);
+				
 				//move on to the next scene
-				moveImageBox = new HBox(clientMove, opponentMove);
+				moveImageBox = new HBox(cMove, opponentMove);
 				showPane.setCenter(moveImageBox);
 				showPane.setRight(information_listView);
-				information_listView.getItems().add("Waiting for opponent to make move.");
-				clientMove.setImage(new Image("file:src/test/resources/"+move+".jpg", 150, 150, false, false));
+				
+				cMove.setImage(imageMap.get(move));
+				//yourPick_text.setText("You chose:" + move);
+			
 				primaryStage.setScene(sceneMap.get("show"));
-
-				//opponentMove= imageMap.get(clientConnection.game.p1Play); //how does this work// should to gameInfo sent from the server just send the opponents move?
-				//clientMove = imageMap.get("move");
+				
+		
+				
+		});
+		
+		//the next botton
+		nextRound.setOnAction(e->{
+			//should have an if the opponent move hasnt been set you cant go to the next round
+			
+			choosePane.setRight(information_listView);
+			//reset the image views
+			cMove.setImage(null); 
+			opponentMove.setImage(null);;
+			primaryStage.setScene(sceneMap.get("choose"));
+			
 		});
 
 
@@ -184,14 +226,14 @@ public class RPLS extends Application {
 	}//end start
 
 	TextField port, ipAddress;
-	Button connectToServer, rock, paper, scissors, lizard, spock, playAgain, quit, sendMove;
+	Button connectToServer, rock, paper, scissors, lizard, spock, playAgain, quit, sendMove, nextRound;
 	VBox introInputs;
 	Text portText, ipAddressText, winner, errorMessage, yourPick_text, oppPick_text;
 	HBox waitingBox, moveButtons, moveImageBox;
 	Text waiting; //for the waiting scene
 	ListView<String> scores; //this will go in the choose and show scenes
-	ImageView clientMove; // this is for the player will = imageMap.get("clients move string")
-	ImageView opponentMove = new ImageView();// this is for the opponent
+	ImageView clientMove, cMove; // this is for the player will = imageMap.get("clients move string")
+	ImageView opponentMove;// this is for the opponent
 	BorderPane choosePane, showPane; //this is for the choose scene and show scene
 	Text moveEvaluation; //this will display during the show scene and will display why your move won/lost "Rock Beats Scissors! You lose"
 	HBox endButtons;
@@ -205,6 +247,20 @@ public class RPLS extends Application {
 		sceneMap.put("choose",  createChooseScene());
 		sceneMap.put("show",  createShowScene());
 		sceneMap.put("end",  createEndScene());
+	}
+	
+	public void createImageMap() {
+		imageMap = new HashMap<String, Image>();
+		Image rock = new Image("file:src/test/resources/rock.jpg", 90, 90, false, false);
+		imageMap.put("rock", rock);
+		Image paper = new Image("file:src/test/resources/paper.jpg", 90, 90, false, false);
+		imageMap.put("paper", paper);
+		Image scissors = new Image("file:src/test/resources/scissors.jpg", 90, 90, false, false);
+		imageMap.put("scissors", scissors);
+		Image spock = new Image("file:src/test/resources/spock.jpg", 90, 90, false, false);
+		imageMap.put("spock", spock);
+		Image lizard = new Image("file:src/test/resources/lizard.jpg", 90, 90, false, false);
+		imageMap.put("lizard", lizard);
 	}
 
 
@@ -227,6 +283,7 @@ public class RPLS extends Application {
 		choosePane = new BorderPane();
 		//the center will be an imageView
 		clientMove = new ImageView();
+		
 		choosePane.setCenter(clientMove); //*************HAVE TO RESET IN EVENT HANDLER
 		//the Bottoms is an HBox with the move buttons
 		moveButtons = new HBox(rock, paper, scissors, lizard, spock, sendMove);
@@ -241,11 +298,15 @@ public class RPLS extends Application {
 		//this is an HBox with a view of both moves
 		//moveImageBox = new HBox(clientMove, opponentMove);
 		showPane = new BorderPane();
-
-		HBox clientDisplay = new HBox(yourPick_text, clientMove);
+		cMove = new ImageView();
+		
+		opponentMove = new ImageView();
+		HBox clientDisplay = new HBox(yourPick_text, cMove);
 		HBox opponentDisplay = new HBox(oppPick_text, opponentMove);
+		HBox next = new HBox(nextRound);
 		VBox gD =new VBox(clientDisplay,opponentDisplay);
 		showPane.setLeft(gD);
+		showPane.setBottom(next);
 		//showPane.setCenter(moveImageBox);
 		//the right is a ListView with the scores
 		//showPane.setRight();
@@ -289,7 +350,7 @@ public class RPLS extends Application {
 		spock.setGraphic(new ImageView(new Image("file:src/test/resources/spock.jpg", 90, 90, false, false)));
 		lizard.setGraphic(new ImageView(new Image("file:src/test/resources/lizard.jpg", 90, 90, false, false)));
 
-
+		nextRound = new Button("Next Round");
 		sendMove = new Button("Send Move");
 		playAgain = new Button("PLAY AGAIN");
 		quit = new Button("QUIT");
