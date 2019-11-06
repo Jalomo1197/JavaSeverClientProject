@@ -326,7 +326,14 @@ public class Server{
     					    			c1Points++;
     					    			
     					    		}
-    					    		else c2Points++;
+    					           else if (evaluateMoves(client1Move, client2Move) == "client2") {
+    					        	   c2Points++;
+    					           }
+    					           else if (evaluateMoves(client1Move, client2Move) == "tie") {
+    					        	   callback.accept("client 1 and client 2 tied");
+    					           }
+
+    					    		
     					        callback.accept("Client 1 Points: "+ c1Points);
        					    	callback.accept("Client 2 Points: "+ c2Points);
 
@@ -474,7 +481,10 @@ public class Server{
 	String evaluateMoves(String c1, String c2) {
 		String winner;
 		//scissors cuts paper and kills lizard
-		if (c1 == "scissors" && ( c2 == "paper" || c2 == "lizard")) {
+		if (c1 == c2) {
+			winner = "tie";
+		}
+		else if (c1 == "scissors" && ( c2 == "paper" || c2 == "lizard")) {
 			winner = "client1";
 		}
 		else if (c1 == "paper" && (c2 == "rock" || c2 == "spock"  )) {

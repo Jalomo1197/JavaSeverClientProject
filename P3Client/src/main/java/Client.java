@@ -42,6 +42,9 @@ public class Client extends Thread{
 		String message = " ";
 		//creating a new socket with the user entered ip/port address
 		//inside the try black so that any exceptions are caught in the catch frame
+		
+		//TODO: HERE WE NEED TO CHECK IF VALID SOCKET/PORT OR ELSE WE GET A NULLPOINTER EXCEPTION
+		
 		try{
 			socketClient= new Socket(ipAddress ,portNum);
 			out = new ObjectOutputStream(socketClient.getOutputStream());

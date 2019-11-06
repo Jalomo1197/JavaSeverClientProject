@@ -84,6 +84,9 @@ public class RPLS extends Application {
 														()->{
 															client1_listView.getItems().add(data.toString());
 															connectedClients_text.setText("Number of clients connected: " + serverConnection.presentClients);
+															//TODO
+															//if (serverConnection.game.winner != -1) 
+															//set the winner text 
 														});
 												}, port);
 											//End of new Server creation, (second parameter is port number)
