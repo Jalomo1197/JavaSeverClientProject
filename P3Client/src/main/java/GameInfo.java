@@ -5,7 +5,7 @@ public class GameInfo implements Serializable {
 	 *
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	boolean isMessage;
 	int clientNumber;
 	boolean has2Players;
@@ -14,7 +14,7 @@ public class GameInfo implements Serializable {
 	String opponentMove;
 	int yourPoints;
 	int opponentsPoints;
-	
+
 	public String message; //maybe to send info about why winner won?? idk
 
 	GameInfo(){

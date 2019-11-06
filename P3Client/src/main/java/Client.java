@@ -11,7 +11,6 @@ public class Client extends Thread{
 	ObjectOutputStream out;
 	ObjectInputStream in;
 	GameInfo game;
-	
 	String opponentMove;
 	int yourPoints;
 	int opponentPoints;
@@ -35,16 +34,14 @@ public class Client extends Thread{
 		opponentMove = null;
 	}
 
-
-
 	public void run() {
 		Socket socketClient;
 		String message = " ";
 		//creating a new socket with the user entered ip/port address
 		//inside the try black so that any exceptions are caught in the catch frame
-		
 		//TODO: HERE WE NEED TO CHECK IF VALID SOCKET/PORT OR ELSE WE GET A NULLPOINTER EXCEPTION
-		
+		//WE can do a try with resources (in the application threa before creating the object Client)
+		//		resoures would be "Socket testingSocket;"
 		try{
 			socketClient= new Socket(ipAddress ,portNum);
 			out = new ObjectOutputStream(socketClient.getOutputStream());
@@ -57,14 +54,9 @@ public class Client extends Thread{
 		}
 
 		while(true) {
-	
 			if (opponentPresent == false) {
 				try {
-					
-					
 					game = (GameInfo)in.readObject();
-					if(game == null)
-						System.out.println("fuck");
 				}
 				catch(Exception e) {
 					System.out.println("Cannot read Info from server.");
@@ -72,32 +64,27 @@ public class Client extends Thread{
 					game.has2Players = false;
 					break;
 				}
-				
-				System.out.println("fuck");
+
 				message = game.message;
 				callback.accept(message);
-			
+
 				if (message.equals("Opponent has join")){
 					opponentPresent = true;
 					clientNumber = game.clientNumber;
 					sceneRequest.accept(message);
 					game.has2Players = true;
 					send(true);
-				
 				}
-				
 			}//end if opponentPresent = false
-			
+
 			//while(opponentPresent== true) {
 			if (opponentPresent == true) {
 					try {
-						
+
 						//accept game object with
 						game = (GameInfo)in.readObject();
-						
 						if (game.isMessage) {
-							
-							System.out.println("the game object was a message!");
+							//System.out.println("the game object was a message!");
 							if (game.winner != -1) {
 								callback.accept(game.message);
 								//this will send the application thread to the ending scene
@@ -108,13 +95,13 @@ public class Client extends Thread{
 								callback.accept(game.message);
 								//callback.accept(game.message);
 							}
-							
+
 						} //end if is message
-						
+
 						else {
-							
+
 							//moves made is for testing purposes but i dont think i use it in the end
-							
+
 							//sceneRequest.accept("Moves made");
 							opponentMove = game.opponentMove;
 							callback.accept("Your opponent chose " + opponentMove);
@@ -122,14 +109,14 @@ public class Client extends Thread{
 							callback.accept("Opponent's Points: " +opponentPoints );
 							yourPoints = game.yourPoints;
 							callback.accept("Your Points: " + yourPoints);
-							
+
 						}
-						
+
 						if (game.has2Players == false) {
 							//do something
 						}
-				
-						
+
+
 
 					}//end try
 					catch(Exception e){
@@ -165,12 +152,12 @@ public class Client extends Thread{
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void send(Boolean p) {
 		game.has2Players = p;
 		game.isMessage = true;
 		game.clientNumber = this.clientNumber;
-	
+
 		try {
 			out.writeObject(game);
 		} catch (IOException e) {
@@ -178,7 +165,7 @@ public class Client extends Thread{
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void send(GameInfo p) {
 		p.isMessage = false;
 		try {

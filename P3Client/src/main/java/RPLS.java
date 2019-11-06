@@ -50,15 +50,14 @@ public class RPLS extends Application {
 		createImageMap();
 
 		sceneRequest = message -> {
-			
 			Platform.runLater(()->{
 				if (message.equals("Opponent has join")){
 					primaryStage.setScene(sceneMap.get("choose"));
 					primaryStage.show();
-					//idk about this. 
+					//idk about this.
 					//clientConnection.send(true);
 				}
-				
+
 				if (message.equals("Opponent has left")) {
 					primaryStage.setScene(sceneMap.get("waiting"));
 					primaryStage.show();
@@ -66,36 +65,26 @@ public class RPLS extends Application {
 				if (message.equals("Moves made")) {
 					information_listView.getItems().add("Opponent has selected!");
 					opponentMove.setImage(imageMap.get(clientConnection.opponentMove));
-					
 					primaryStage.setScene(sceneMap.get("show"));
-					
 				}
 				if (message.equals("end")) {
 					primaryStage.setScene(sceneMap.get("end"));
 					primaryStage.show();
 				}
-				
+
 				if (message.equals("choose")) {
 					primaryStage.setScene(sceneMap.get("choose"));
 					primaryStage.show();
-					
-				}
-				
-				
 
-				//
+				}
 			});
 		};
-
-
 		primaryStage.setScene(sceneMap.get("intro"));
-
+		primaryStage.show();
 		//*************//
-
 		//not sure about the below code..how to handle closing out of the box
 		//from ALEX: we need to make sure we kill the client thread connection
 		//then close the applications
-
 		/*
 		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
@@ -105,20 +94,9 @@ public class RPLS extends Application {
             }
         });
 		*/
-		primaryStage.show();
-
-		//for intro scene
-		//if the user hasnt entered anything in the port or ip fields the
-		//connect button is disabled
-		//if (port.getText() == null || ipAddress.getText() == null){
-		//	connectToServer.setDisable(true);
-		//}
-		//else enable the connectToServer Button
-		//else connectToServer.setDisable(false);
 
 		//creating a new client connection when user clicks on the connectToServer Button
 		//the client constructor takes a serializable consumer and the ip/port address entered by user
-
 		connectToServer.setOnAction(e->
 		{
 			if(port.getText().equals("") || ipAddress.getText().equals(""))
@@ -136,18 +114,18 @@ public class RPLS extends Application {
 
 			  //  if (clientConnection.isAlive() == false)
 			   // {}//do something go back to intro scene..send an error message
-			   
-			    
+
+
 			     //if (clientConnection.opponentPresent == false) {
 			    	//{
 			    		//if there arent two players set the scene to the waiting stage
-			    		
+
 			    		primaryStage.setScene(sceneMap.get("waiting"));
 			     //}
-			     
-			     
+
+
 			     //primaryStage.setScene(sceneMap.get("choose"));
-			
+
 			    	//}
 			    	//if there are two players, then go to the choose scene
 			    	//primaryStage.setScene(sceneMap.get("choose"));
@@ -190,39 +168,26 @@ public class RPLS extends Application {
 		//else sendMove.setDisable(false);
 
 		sendMove.setOnAction(e->{
-			
-				clientConnection.send(move);
-				
-				//move on to the next scene
-				moveImageBox = new HBox(cMove, opponentMove);
-				showPane.setCenter(moveImageBox);
-				showPane.setRight(information_listView);
-				
-				cMove.setImage(imageMap.get(move));
-				//yourPick_text.setText("You chose:" + move);
-			
-				primaryStage.setScene(sceneMap.get("show"));
-				
-		
-				
+			clientConnection.send(move);
+			//move on to the next scene
+			moveImageBox = new HBox(cMove, opponentMove);
+			showPane.setCenter(moveImageBox);
+			showPane.setRight(information_listView);
+			cMove.setImage(imageMap.get(move));
+			information_listView.getItems().add("You picked " + move + "!");
+			primaryStage.setScene(sceneMap.get("show"));
 		});
-		
+
 		//the next botton
 		nextRound.setOnAction(e->{
 			//should have an if the opponent move hasnt been set you cant go to the next round
-			
 			choosePane.setRight(information_listView);
 			//reset the image views
-			cMove.setImage(null); 
+			cMove.setImage(null);
+			clientMove.setImage(null);
 			opponentMove.setImage(null);;
 			primaryStage.setScene(sceneMap.get("choose"));
-			
 		});
-
-
-
-
-
 	}//end start
 
 	TextField port, ipAddress;
@@ -248,7 +213,7 @@ public class RPLS extends Application {
 		sceneMap.put("show",  createShowScene());
 		sceneMap.put("end",  createEndScene());
 	}
-	
+
 	public void createImageMap() {
 		imageMap = new HashMap<String, Image>();
 		Image rock = new Image("file:src/test/resources/rock.jpg", 90, 90, false, false);
@@ -283,7 +248,7 @@ public class RPLS extends Application {
 		choosePane = new BorderPane();
 		//the center will be an imageView
 		clientMove = new ImageView();
-		
+
 		choosePane.setCenter(clientMove); //*************HAVE TO RESET IN EVENT HANDLER
 		//the Bottoms is an HBox with the move buttons
 		moveButtons = new HBox(rock, paper, scissors, lizard, spock, sendMove);
@@ -299,7 +264,7 @@ public class RPLS extends Application {
 		//moveImageBox = new HBox(clientMove, opponentMove);
 		showPane = new BorderPane();
 		cMove = new ImageView();
-		
+
 		opponentMove = new ImageView();
 		HBox clientDisplay = new HBox(yourPick_text, cMove);
 		HBox opponentDisplay = new HBox(oppPick_text, opponentMove);

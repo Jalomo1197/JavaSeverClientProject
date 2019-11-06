@@ -5,8 +5,8 @@ public class GameInfo implements Serializable {
 	 *
 	 */
 	private static final long serialVersionUID = 1L;
-	
-	
+
+
 	//eventually these should be set to private
 	boolean isMessage; //is message is used if we are only trying to send a message and ignore all other fields
 	int clientNumber;
@@ -16,7 +16,7 @@ public class GameInfo implements Serializable {
 	String opponentMove;
 	int yourPoints;
 	int opponentsPoints;
-	
+
 	public String message; //maybe to send info about why winner won?? idk
 
 	GameInfo(){
