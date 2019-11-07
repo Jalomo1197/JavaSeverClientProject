@@ -10,8 +10,9 @@ import java.util.function.Consumer;
 public class Client extends Thread{
 	ObjectOutputStream out;
 	ObjectInputStream in;
-	GameInfo game;
+	GameInfo gameInfo;
 	String opponentMove;
+	int clientID;
 	int yourPoints;
 	int opponentPoints;
 
@@ -29,7 +30,7 @@ public class Client extends Thread{
 		portNum = Integer.parseInt(port);
 		callback = call;
 		this.sceneRequest = sceneRequest;
-		//game = new GameInfo();
+		gameInfo = new GameInfo();
 		opponentPresent  = false;
 		opponentMove = null;
 	}
@@ -53,7 +54,85 @@ public class Client extends Thread{
 		    callback.accept("Client socket did not launch");
 		}
 
+		while(gameInfo.has2Players == false){
+			try{
+				gameInfo = (GameInfo)in.readObject();
+			}
+			catch(Exception e) {
+				System.out.println("could not read from server. ID was not initialized");
+				//should end process because of error?
+			}
+		}
+		//	ID is being set and scene change away from waiting scene (better to have this scene change outside)
+		clientID = gameInfo.initialID;
+		System.out.println("Player " + clientID + " has ID set: " + clientID);
+		sceneRequest.accept(gameInfo.publicMessage);
+
 		while(true) {
+			callback.accept("youre client: " + clientID);
+			//Waiting at while loop until opponent make there move.
+			try{
+				gameInfo = (GameInfo)in.readObject();
+				callback.accept("Opponent made move!");
+				gameInfo.printGameInfo();
+			}
+			catch(Exception e){
+				System.out.println("ERROR: could not read opponent move");
+			}
+
+			if (clientID == 1)
+				sceneRequest.accept(gameInfo.playerTwoMove);
+			else if (clientID == 2)
+				sceneRequest.accept(gameInfo.playerOneMove);
+
+	/*		if (clientID == 1){
+				//while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
+                //        System.out.print(".");
+                //}
+
+				//while(gameInfo.playerTwoMove.equals("")){
+					try{
+						gameInfo = (GameInfo)in.readObject();
+						callback.accept("Opponent made move!");
+						gameInfo.printGameInfo();
+					}
+					catch(Exception e){
+						System.out.println("ERROR: could not read opponent move");
+					}
+				//}
+				sceneRequest.accept(gameInfo.playerTwoMove);
+			}
+			else if (clientID == 2){
+				//while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
+                //        System.out.print(".");
+                //    }
+
+				//while(gameInfo.playerOneMove.equals("")){
+					try{
+						gameInfo = (GameInfo)in.readObject();
+						callback.accept("Opponent made move!");
+						gameInfo.printGameInfo();
+					}
+					catch(Exception e){
+						System.out.println("ERROR: could not read opponent move");
+					}
+				//}
+				sceneRequest.accept(gameInfo.playerOneMove);
+			}
+			else{
+				System.out.println("ERROR: Client ID error, while wating for opponent move");
+			}
+	*/
+
+			while(true){}//for teasing
+			//callback.accept("Opponent made their move!");
+
+
+
+
+
+
+		/*
 			if (opponentPresent == false) {
 				try {
 					game = (GameInfo)in.readObject();
@@ -126,8 +205,8 @@ public class Client extends Thread{
 					} //end catch
 
 			  }//end while
-
-				}//end while true
+			  */
+		}//end while true
 
 				//start reading game objects
 				//sever should probably send a message befor send game object to show that the other player is still connect
@@ -141,20 +220,38 @@ public class Client extends Thread{
 	//Will our data will be a String for the move?
 	//or will it be a whole game info class object
 	public void send(String move) {
-		//game.message = data;
-		game.clientNumber = this.clientNumber;
-		game.clientMove = move;
-		game.isMessage = false;
+		if (clientID == 1){
+			gameInfo.playerOneMove = move;
+			callback.accept("(1)You picked " + gameInfo.playerOneMove + "!");
+		}
+		else if (clientID == 2){
+			gameInfo.playerTwoMove = move;
+			callback.accept("(2)You picked " + gameInfo.playerTwoMove + "!");
+		}
+		else{
+			System.out.println("Error: Client ID is not valid. Client ID = " + clientID);
+		}
+
+		try{
+			out.writeObject(gameInfo);
+		}
+		catch (IOException e) {
+			System.out.println("Error: Unable to send players move");
+		}
+		/*//game.message = data;
+		gameInfo.clientNumber = this.clientNumber;
+		gameInfo.clientMove = move;
+		//gameInfo.isMessage = false;
 		try {
 			out.writeObject(game);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	public void send(Boolean p) {
-		game.has2Players = p;
+		/*game.has2Players = p;
 		game.isMessage = true;
 		game.clientNumber = this.clientNumber;
 
@@ -163,17 +260,17 @@ public class Client extends Thread{
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	public void send(GameInfo p) {
-		p.isMessage = false;
+		/*p.isMessage = false;
 		try {
 			out.writeObject(p);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 

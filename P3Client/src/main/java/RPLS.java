@@ -57,11 +57,21 @@ public class RPLS extends Application {
 					//idk about this.
 					//clientConnection.send(true);
 				}
-
 				if (message.equals("Opponent has left")) {
 					primaryStage.setScene(sceneMap.get("waiting"));
 					primaryStage.show();
 				}
+				for (String x : validMoves){
+					if (message.equals(x)){
+						information_listView.getItems().add("Opponent picked " + x);
+						opponentMove.setImage(imageMap.get(x));
+						break;
+					}
+				}
+				if (message.equals("")){
+					information_listView.getItems().add("Error null move from opponent");
+				}
+				/*
 				if (message.equals("Moves made")) {
 					information_listView.getItems().add("Opponent has selected!");
 					opponentMove.setImage(imageMap.get(clientConnection.opponentMove));
@@ -76,7 +86,7 @@ public class RPLS extends Application {
 					primaryStage.setScene(sceneMap.get("choose"));
 					primaryStage.show();
 
-				}
+				}*/
 			});
 		};
 		primaryStage.setScene(sceneMap.get("intro"));
@@ -174,7 +184,6 @@ public class RPLS extends Application {
 			showPane.setCenter(moveImageBox);
 			showPane.setRight(information_listView);
 			cMove.setImage(imageMap.get(move));
-			information_listView.getItems().add("You picked " + move + "!");
 			primaryStage.setScene(sceneMap.get("show"));
 		});
 
