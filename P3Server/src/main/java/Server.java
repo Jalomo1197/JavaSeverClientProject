@@ -162,7 +162,7 @@ public class Server{
                 setIDs(); //contains FIRST WRITE TO CLIENTS
             }
 
-            //FOR HANA: java is weird, cannot have empty while loop or else thread gets stuck.
+            //FOR HANNA: java is weird, cannot have empty while loop or else thread gets stuck.
             while(gameInfo.has2Players == false){
                 //blocking process till two players are present, provides order
                 System.out.print(".");
@@ -178,7 +178,7 @@ public class Server{
                 //sending each clientthread their moves
                 try{
                      /*
-                        FOR HANA:
+                        FOR HANNA:
                         Client thread sits here until client uses the send() function. It is
                         read into a temp GameInfo because we dont want it to overwrite saved data.
                         Notes:
@@ -201,13 +201,15 @@ public class Server{
                     else{
                         System.out.println("ERROR: invalid client number, client number = " + this.clientNumber);
                     }
-                   // waiting till both fields are filled. Strange while-loop: look at explianation on line 165.
-                   while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
-                        System.out.print(".");
-                    }
                 }
                 catch(Exception e){
                     System.out.println("ERROR: could not read moves from clients");
+                }
+
+
+                // waiting till both fields are filled. Strange while-loop: look at explianation on line 165.
+               while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
+                    System.out.print(".");
                 }
 
                 //Checking/Printing GameInfo. Has appropiate data in both threads. Client however get empty opponent moves.
@@ -225,8 +227,10 @@ public class Server{
                   FIX : none yet
                 */
                 try{
+                    out.reset();
                     out.writeObject(gameInfo); //SECOND WRITE TO CLIENTS
-                    out.writeObject(gameInfo); //Third write for testing
+                    out.flush();
+                    //out.writeObject(gameInfo); //Third write for testing
                 }
                 catch(Exception e){
                     System.out.println("ERROR: could not exchange clients' moves");

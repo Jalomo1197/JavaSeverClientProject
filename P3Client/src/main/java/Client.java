@@ -72,12 +72,10 @@ public class Client extends Thread{
 
 		while(true) {
 			callback.accept("you're client: " + clientID); //debugging purposes
-			GameInfo temp = new GameInfo();
+			//GameInfo temp = new GameInfo();
 			try{
 				//PROBLEM HERE. server has values filled but when read the values of the opponent move are empty.
 				// Note: temp GameInfo was not neede here because Server had both moves saved.
-				temp = (GameInfo)in.readObject();
-				temp.printGameInfo();
 				gameInfo = (GameInfo)in.readObject(); //SECOND READ, BLOCKING METHOD. Server SHOULD have both moves saved.
 				//gameInfo = (GameInfo)in.readObject(); //third write for testing
 				callback.accept("Opponent made move!");
@@ -93,13 +91,14 @@ public class Client extends Thread{
 			 * By null I mean "" empty string. which is what it is initialized with when creating a GameInfo object.
 			*/
 			if (clientID == 1){
-				gameInfo.playerTwoMove = temp.playerTwoMove;
+				//gameInfo.playerTwoMove = temp.playerTwoMove;
 				sceneRequest.accept(gameInfo.playerTwoMove);
 			}
 			else if (clientID == 2){
-				gameInfo.playerOneMove = temp.playerOneMove;
+				//gameInfo.playerOneMove = temp.playerOneMove;
 				sceneRequest.accept(gameInfo.playerOneMove);
 			}
+
 	/*		//Waiting at while loop until opponent make there move.
 			if (clientID == 1){
 				//while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
