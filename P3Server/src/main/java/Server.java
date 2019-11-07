@@ -226,6 +226,7 @@ public class Server{
                 */
                 try{
                     out.writeObject(gameInfo); //SECOND WRITE TO CLIENTS
+                    out.writeObject(gameInfo); //Third write for testing
                 }
                 catch(Exception e){
                     System.out.println("ERROR: could not exchange clients' moves");

@@ -56,36 +56,52 @@ public class Client extends Thread{
 
 		while(gameInfo.has2Players == false){
 			try{
-				gameInfo = (GameInfo)in.readObject();
+				gameInfo = (GameInfo)in.readObject(); //FIRST READ, BLOCKING METHOD
 			}
 			catch(Exception e) {
 				System.out.println("could not read from server. ID was not initialized");
 				//should end process because of error?
 			}
 		}
-		//	ID is being set and scene change away from waiting scene (better to have this scene change outside)
+
+		//	ID is being set and scene change to choose scene (better to have this scene change outside the while loop)
+		//  FIRST READ CONTAINS ID NUMBER FOR CLIENT.
 		clientID = gameInfo.initialID;
 		System.out.println("Player " + clientID + " has ID set: " + clientID);
-		sceneRequest.accept(gameInfo.publicMessage);
+		sceneRequest.accept(gameInfo.publicMessage); //gameInfo.publicMessage contains "Opponent has joined"
 
 		while(true) {
-			callback.accept("youre client: " + clientID);
-			//Waiting at while loop until opponent make there move.
+			callback.accept("you're client: " + clientID); //debugging purposes
+			GameInfo temp = new GameInfo();
 			try{
-				gameInfo = (GameInfo)in.readObject();
+				//PROBLEM HERE. server has values filled but when read the values of the opponent move are empty.
+				// Note: temp GameInfo was not neede here because Server had both moves saved.
+				temp = (GameInfo)in.readObject();
+				temp.printGameInfo();
+				gameInfo = (GameInfo)in.readObject(); //SECOND READ, BLOCKING METHOD. Server SHOULD have both moves saved.
+				//gameInfo = (GameInfo)in.readObject(); //third write for testing
 				callback.accept("Opponent made move!");
-				gameInfo.printGameInfo();
+				//gameInfo.printGameInfo(); //this shows how the gameInfo was read
 			}
 			catch(Exception e){
 				System.out.println("ERROR: could not read opponent move");
 			}
 
-			if (clientID == 1)
+			//FOR HANA:
+			/*
+			 * Because opponent move field empty, clients list view outputs "Error null move from opponent".
+			 * By null I mean "" empty string. which is what it is initialized with when creating a GameInfo object.
+			*/
+			if (clientID == 1){
+				gameInfo.playerTwoMove = temp.playerTwoMove;
 				sceneRequest.accept(gameInfo.playerTwoMove);
-			else if (clientID == 2)
+			}
+			else if (clientID == 2){
+				gameInfo.playerOneMove = temp.playerOneMove;
 				sceneRequest.accept(gameInfo.playerOneMove);
-
-	/*		if (clientID == 1){
+			}
+	/*		//Waiting at while loop until opponent make there move.
+			if (clientID == 1){
 				//while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
                 //        System.out.print(".");
                 //}
