@@ -20,11 +20,14 @@ public class Server{
 	GameInfo gameInfo;
 	String client1Move;
 	String client2Move;
+	
 	//int winner;
 
 	//booleans for if client has made their moves
 	boolean client1;
 	boolean client2;
+	boolean hasReset;
+    boolean hasEvaluated;
     int c;
 
 	int c1Points;
@@ -43,6 +46,8 @@ public class Server{
 		c1Points = 0;
 		c2Points = 0;
         server.start();
+        hasReset = false;
+        hasEvaluated = false;
 	}
 
 	public class TheServer extends Thread{
@@ -110,12 +115,14 @@ public class Server{
 		ObjectOutputStream out;
         boolean informedWait;
         int clientNumber;
+      
 
 		ClientThread(Socket s, int clientNum){
 			this.connection = s;
 			this.clientNumber = clientNum;
             this.informedWait = false;
             callback.accept("Client " + clientNumber + " has joined the server");
+            
 		}
 
 		//when each client joins the server this tells
@@ -206,6 +213,7 @@ public class Server{
       		        
                     GameInfo temp = new GameInfo();   // temp to prevent overriding info
                     temp = (GameInfo)in.readObject(); // send() function from client FIRST READ.
+                    hasEvaluated = false;
                     // adjusting fields based on client ID
                     if(this.clientNumber == 1){
                         gameInfo.playerOneMove = temp.playerOneMove;
@@ -253,8 +261,13 @@ public class Server{
            
              
                 try{
+                	
                 	callback.accept("Both clients have made their moves!");
-			        evaluateMoves();
+                	
+                	if (hasEvaluated == false) {
+                		evaluateMoves();
+                		hasEvaluated = true;
+                	}
 			        
 			        callback.accept(clientNumber + "Client 1 Points: "+ gameInfo.playerOnePoints);
 				    callback.accept("Client 2 Points: "+ gameInfo.playerTwoPoints);
@@ -272,7 +285,7 @@ public class Server{
                 //Both clients made their moves at this point
                 //now figure 
                 
-               resetPlayerMoves();
+                resetPlayerMoves();
                 
 		    	}//while gameInfo.winner 
 		    	
