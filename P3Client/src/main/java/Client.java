@@ -211,22 +211,26 @@ public class Client extends Thread{
 		}
 
 		try{
+			out.reset();
 			out.writeObject(gameInfo);
+			out.flush();
 		}
 		catch (IOException e) {
 			System.out.println("Error: Unable to send players move");
 		}
-		/*//game.message = data;
-		gameInfo.clientNumber = this.clientNumber;
-		gameInfo.clientMove = move;
-		//gameInfo.isMessage = false;
-		try {
-			out.writeObject(game);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
 	}
+
+	public void send(){
+		try{
+			out.reset();
+			out.writeObject(gameInfo);
+			out.flush();
+		}
+		catch (IOException e) {
+			System.out.println("Error: Unable to send option to play again");
+		}
+	}
+
 
 	public void send(Boolean p) {
 		/*game.has2Players = p;
