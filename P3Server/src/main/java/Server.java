@@ -20,6 +20,7 @@ public class Server{
 	GameInfo gameInfo;
 	String client1Move;
 	String client2Move;
+	//int winner;
 
 	//booleans for if client has made their moves
 	boolean client1;
@@ -176,6 +177,14 @@ public class Server{
 
 		    while(true) {
                 //sending each clientthread their moves
+		    //	gameInfo.playerOnePoints = 0;
+		    //	gameInfo.playerTwoPoints = 0;
+		    	
+		    	
+		    	
+		   while (gameInfo.winner == -1) {
+		    //gameInfo.playerOneMove = "";
+		      //gameInfo.playerTwoMove = "";
                 try{
                      /*
                         FOR HANNA:
@@ -215,6 +224,8 @@ public class Server{
                 //Checking/Printing GameInfo. Has appropiate data in both threads. Client however get empty opponent moves.
                 System.out.println("ClientThread "+ clientNumber +": Game info has both move fields filled. preparing to send to Clients");
                 gameInfo.printGameInfo();
+                
+               
 
                 // if the below try and catch is commented out the clients get stuck waitng for a read for opponents move (in game info)
                 /* SO this is the PROBLEM:
@@ -226,7 +237,19 @@ public class Server{
                     **********************************************************************************************************************
                   FIX : none yet
                 */
+                //if(gameInfo.has2Players == true) {
+			    	
+				    
+                //}//end if
+             
                 try{
+                	callback.accept("Both clients have made their moves!");
+			        evaluateMoves();
+			        
+			        callback.accept(clientNumber + "Client 1 Points: "+ gameInfo.playerOnePoints);
+				    callback.accept("Client 2 Points: "+ gameInfo.playerTwoPoints);
+				   
+                	//writing objects to clients
                     out.reset();
                     out.writeObject(gameInfo); //SECOND WRITE TO CLIENTS
                     out.flush();
@@ -235,13 +258,23 @@ public class Server{
                 catch(Exception e){
                     System.out.println("ERROR: could not exchange clients' moves");
                 }
-
+            //}
                 //get thread stuck until further progess
                 //feel free to commit things out or uncommit things below, but we should fix the pr
-                while(true){}//for teasing
+             
 
-
-
+		    	}//while gameInfo.winner 
+		    	
+		    	//at this point we have a winner
+		    	//tr
+		    	
+		    	//read from both
+		    	//check if play again
+		    	//if yes reset everything continue
+		    	//else send message to enemy and break
+		    	
+		    	
+		    	
 			   /* try {
 			    	while (true) {
     			    	if (gameInfo.has2players == false) {
@@ -482,32 +515,33 @@ public class Server{
 	    }//end run
 
         //returns the winner client1 or client2
-        /*String evaluateMoves(String c1, String c2) {
-        	String winner;
+     void evaluateMoves() {
+        	//String winner;
         	//scissors cuts paper and kills lizard
-        	if (c1 == c2) {
-        		winner = "tie";
+        	if (gameInfo.playerOneMove.equals(gameInfo.playerTwoMove)) {
+        		callback.accept("Both players have tied");
+        		return;
         	}
-        	else if (c1 == "scissors" && ( c2 == "paper" || c2 == "lizard")) {
-        		winner = "client1";
+        	else if (gameInfo.playerOneMove == "scissors" && ( gameInfo.playerTwoMove == "paper" ||gameInfo.playerTwoMove == "lizard")) {
+        		gameInfo.playerOnePoints++;
         	}
-        	else if (c1 == "paper" && (c2 == "rock" || c2 == "spock"  )) {
-        		winner = "client1";
+        	else if (gameInfo.playerOneMove == "paper" && (gameInfo.playerTwoMove== "rock" || gameInfo.playerTwoMove== "spock"  )) {
+        		gameInfo.playerOnePoints++;
         	}
-        	else if (c1 == "rock" && (c2 == "lizard" || c2 == "scissors"  )) {
-        		winner = "client1";
+        	else if (gameInfo.playerOneMove == "rock" && (gameInfo.playerTwoMove == "lizard" || gameInfo.playerTwoMove == "scissors"  )) {
+        		gameInfo.playerOnePoints++;
         	}
-        	else if (c1 == "lizard" && (c2 == "spock" || c2 == "paper"  )) {
-        		winner = "client1";
+        	else if (gameInfo.playerOneMove == "lizard" && (gameInfo.playerTwoMove== "spock" || gameInfo.playerTwoMove == "paper"  )) {
+        		gameInfo.playerOnePoints++;
         	}
-        	else if (c1 == "spock"&& (c2 == "rock" || c2 == "scissors" )) {
-        		winner = "client1";
+        	else if (gameInfo.playerOneMove == "spock"&& (gameInfo.playerTwoMove == "rock" || gameInfo.playerTwoMove == "scissors" )) {
+        		gameInfo.playerOnePoints++;
         	}
-        	else winner = "client2";
+        	else gameInfo.playerTwoPoints++;
 
-        	return winner;
-        }
-*/
+        	return;
+        }//evaluateMoves
+
 	//TODO this will return a message like scissors beats paper, scissors beats lizard etc
 	//kinda tedious im lazy rn
 	//the format is c1 is your move the clients move, and c2 is the opponent move
