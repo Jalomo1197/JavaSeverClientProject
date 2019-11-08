@@ -84,15 +84,15 @@ public class Client extends Thread{
 
 				if (clientID == 1){
 					sceneRequest.accept(gameInfo.playerTwoMove);
-					sceneRequest.accept("		Points");
-					sceneRequest.accept("Your points:      " + gameInfo.playerOnePoints);
-					sceneRequest.accept("Opponent points:  " + gameInfo.playerTwoPoints);
+					callback.accept("		Points");
+					callback.accept("Your points:      " + gameInfo.playerOnePoints);
+					callback.accept("Opponent points:  " + gameInfo.playerTwoPoints);
 				}
 				else if (clientID == 2){
 					sceneRequest.accept(gameInfo.playerOneMove);
-					sceneRequest.accept("		      Points");
-					sceneRequest.accept("Your points:      " + gameInfo.playerTwoPoints);
-					sceneRequest.accept("Opponent points:  " + gameInfo.playerOnePoints);
+					callback.accept("		      Points");
+					callback.accept("Your points:      " + gameInfo.playerTwoPoints);
+					callback.accept("Opponent points:  " + gameInfo.playerOnePoints);
 				}
 			}
 
@@ -231,29 +231,20 @@ public class Client extends Thread{
 		}
 	}
 
-
-	public void send(Boolean p) {
-		/*game.has2Players = p;
-		game.isMessage = true;
-		game.clientNumber = this.clientNumber;
-
-		try {
-			out.writeObject(game);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
+	public void requestReset(){
+		if (clientID == 1){
+			gameInfo.messageFromPlayerOne = "reset picks";
+		}
+		else if (clientID == 2){
+			gameInfo.messageFromPlayerTwo = "reset picks";
+		}
+		try{
+			out.reset();
+			out.writeObject(gameInfo);
+			out.flush();
+		}
+		catch (IOException e) {
+			System.out.println("Error: Unable to send \"reset picks\"");
+		}
 	}
-
-	public void send(GameInfo p) {
-		/*p.isMessage = false;
-		try {
-			out.writeObject(p);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
-	}
-
-
 }

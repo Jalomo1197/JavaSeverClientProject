@@ -206,6 +206,7 @@ public class RPLS extends Application {
 			clientMove.setImage(null);
 			opponentMove.setImage(null);;
 			primaryStage.setScene(sceneMap.get("choose"));
+			clientConnection.requestReset();
 		});
 
 		//TODO: alex assignment.
