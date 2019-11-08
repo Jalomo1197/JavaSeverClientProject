@@ -183,8 +183,7 @@ public class Server{
 		    	
 		    	
 		   while (gameInfo.winner == -1) {
-		    //gameInfo.playerOneMove = "";
-		      //gameInfo.playerTwoMove = "";
+		     
                 try{
                      /*
                         FOR HANNA:
@@ -196,6 +195,9 @@ public class Server{
                             clients, he clients get empty string in their opponent moves. Causing their
                             list view to print "Error null move from opponent"
                     */
+                	
+             
+      		        
                     GameInfo temp = new GameInfo();   // temp to prevent overriding info
                     temp = (GameInfo)in.readObject(); // send() function from client FIRST READ.
                     // adjusting fields based on client ID
@@ -210,7 +212,7 @@ public class Server{
                     else{
                         System.out.println("ERROR: invalid client number, client number = " + this.clientNumber);
                     }
-                }
+                }//end try
                 catch(Exception e){
                     System.out.println("ERROR: could not read moves from clients");
                 }
@@ -259,12 +261,14 @@ public class Server{
                     System.out.println("ERROR: could not exchange clients' moves");
                 }
             //}
-                //get thread stuck until further progess
-                //feel free to commit things out or uncommit things below, but we should fix the pr
-             
-
+                //Both clients made their moves at this point
+                //now figure 
+                
+              resetPlayerMoves();
+                
 		    	}//while gameInfo.winner 
 		    	
+		   	
 		    	//at this point we have a winner
 		    	//tr
 		    	
@@ -515,12 +519,21 @@ public class Server{
 	    }//end run
 
         //returns the winner client1 or client2
+		
+	void resetPlayerMoves() {
+		gameInfo.playerOneMove = "";
+		gameInfo.playerTwoMove = "";
+		//gameInfo.playerOnePoints = 0;
+		//gameInfo.playerTwoPoints = 0;
+		//gameInfo.winner = -1;
+	}
+	
      void evaluateMoves() {
         	//String winner;
         	//scissors cuts paper and kills lizard
         	if (gameInfo.playerOneMove.equals(gameInfo.playerTwoMove)) {
         		callback.accept("Both players have tied");
-        		return;
+        		//return;
         	}
         	else if (gameInfo.playerOneMove == "scissors" && ( gameInfo.playerTwoMove == "paper" ||gameInfo.playerTwoMove == "lizard")) {
         		gameInfo.playerOnePoints++;
@@ -538,6 +551,14 @@ public class Server{
         		gameInfo.playerOnePoints++;
         	}
         	else gameInfo.playerTwoPoints++;
+        	
+        	if (gameInfo.playerOnePoints == 3) {
+        		gameInfo.winner =1;
+        	}
+        	else if (gameInfo.playerTwoPoints ==3) {
+        		gameInfo.winner = 1;
+        	}
+        	
 
         	return;
         }//evaluateMoves
