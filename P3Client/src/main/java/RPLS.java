@@ -216,6 +216,15 @@ public class RPLS extends Application {
 			if (clientConnection.clientID == 2)
 				clientConnection.gameInfo.messageFromPlayerTwo = "Play Again";
 			clientConnection.send();
+			clientConnection.playAgain = true;
+
+			choosePane.setRight(information_listView);
+			information_listView.getItems().clear();;
+			//reset the image views
+			cMove.setImage(null);
+			clientMove.setImage(null);
+			opponentMove.setImage(null);
+			primaryStage.setScene(sceneMap.get("choose"));
 		});
 		quit.setOnAction(e->{
 			if (clientConnection.clientID == 1)
@@ -223,6 +232,7 @@ public class RPLS extends Application {
 			if (clientConnection.clientID == 2)
 				clientConnection.gameInfo.messageFromPlayerTwo = "Quit";
 			clientConnection.send();
+			clientConnection.killThread(); //TODO
 		});
 	}//end start
 

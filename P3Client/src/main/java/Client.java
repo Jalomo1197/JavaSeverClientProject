@@ -8,22 +8,17 @@ import java.util.function.Consumer;
 
 
 public class Client extends Thread{
+	private Consumer<Serializable> callback;
+	private Consumer<String> sceneRequest;
 	ObjectOutputStream out;
 	ObjectInputStream in;
 	GameInfo gameInfo;
-	String opponentMove;
-	int clientID;
-	int yourPoints;
-	int opponentPoints;
-
-	//attributes for portNum and ipAddress user enters
-	//initialized in constructor for Client
-	int portNum;
 	String ipAddress;
-	boolean opponentPresent;
-	private Consumer<Serializable> callback;
-	private Consumer<String> sceneRequest;
-	int clientNumber;
+	boolean playAgain;
+	int clientID;
+	int portNum;
+
+
 
 	Client(Consumer<Serializable> call, String ip, String port, Consumer<String> sceneRequest){
 		ipAddress = ip;
@@ -31,13 +26,11 @@ public class Client extends Thread{
 		callback = call;
 		this.sceneRequest = sceneRequest;
 		gameInfo = new GameInfo();
-		opponentPresent  = false;
-		opponentMove = null;
+		playAgain = false;
 	}
 
 	public void run() {
 		Socket socketClient;
-		String message = " ";
 		//creating a new socket with the user entered ip/port address
 		//inside the try black so that any exceptions are caught in the catch frame
 		//TODO: HERE WE NEED TO CHECK IF VALID SOCKET/PORT OR ELSE WE GET A NULLPOINTER EXCEPTION
@@ -105,93 +98,17 @@ public class Client extends Thread{
 				callback.accept("You Lost!");
 				sceneRequest.accept("You Lost!");
 			}
-
-
-			while(true){}//for teasing
-			//callback.accept("Opponent made their move!");
-
-		/*
-			if (opponentPresent == false) {
-				try {
-					game = (GameInfo)in.readObject();
+			while(playAgain == false ){
+				try{
+					sleep(1000);
 				}
-				catch(Exception e) {
-					System.out.println("Cannot read Info from server.");
-					opponentPresent = false;
-					game.has2Players = false;
-					break;
-				}
+				catch(Exception e){}
+			}//for teasing
 
-				message = game.message;
-				callback.accept(message);
-
-				if (message.equals("Opponent has join")){
-					opponentPresent = true;
-					clientNumber = game.clientNumber;
-					sceneRequest.accept(message);
-					game.has2Players = true;
-					send(true);
-				}
-			}//end if opponentPresent = false
-
-			//while(opponentPresent== true) {
-			if (opponentPresent == true) {
-					try {
-
-						//accept game object with
-						game = (GameInfo)in.readObject();
-						if (game.isMessage) {
-							//System.out.println("the game object was a message!");
-							if (game.winner != -1) {
-								callback.accept(game.message);
-								//this will send the application thread to the ending scene
-								sceneRequest.accept("end");
-							}
-							else {
-								sceneRequest.accept(message);
-								callback.accept(game.message);
-								//callback.accept(game.message);
-							}
-
-						} //end if is message
-
-						else {
-
-							//moves made is for testing purposes but i dont think i use it in the end
-
-							//sceneRequest.accept("Moves made");
-							opponentMove = game.opponentMove;
-							callback.accept("Your opponent chose " + opponentMove);
-							opponentPoints = game.opponentsPoints;
-							callback.accept("Opponent's Points: " +opponentPoints );
-							yourPoints = game.yourPoints;
-							callback.accept("Your Points: " + yourPoints);
-
-						}
-
-						if (game.has2Players == false) {
-							//do something
-						}
-
-
-
-					}//end try
-					catch(Exception e){
-						System.out.println("Cannot read game Info from opponent.");
-						opponentPresent = false;
-						break;
-					} //end catch
-
-			  }//end while
-			  */
+			gameInfo = new GameInfo();
+			gameInfo.has2Players = true; //probably not but just to not brake anything for now
 		}//end while true
-
-				//start reading game objects
-				//sever should probably send a message befor send game object to show that the other player is still connect
-				//if message ==> true
-				//then read game object?
-			//}
-		}//end run
+	}//end run
 
 
 
@@ -247,4 +164,10 @@ public class Client extends Thread{
 			System.out.println("Error: Unable to send \"reset picks\"");
 		}
 	}
+
+
+	public void killThread(){
+		//IDK
+	}
+
 }

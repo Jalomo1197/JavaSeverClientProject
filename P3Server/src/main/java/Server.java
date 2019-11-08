@@ -9,32 +9,16 @@ import javafx.application.Platform;
 import javafx.scene.control.ListView;
 
 public class Server{
-
-	int count = 1;
-	int presentClients = 0;
 	ArrayList<ClientThread> clients = new ArrayList<ClientThread>();
 	ArrayList<Integer> reuseNumbers = new ArrayList<Integer>();
-	TheServer server;
 	private Consumer<Serializable> callback;
-	int portNum;
+    TheServer server;
 	GameInfo gameInfo;
-	String client1Move;
-	String client2Move;
-
-	//int winner;
-
-	//booleans for if client has made their moves
-	boolean client1;
-	boolean client2;
-	boolean hasReset;
-    boolean hasEvaluated;
-    int c;
-    int inChargeOfE;
-
-
-	int c1Points;
-	int c2Points;
-
+    boolean client1sus;
+    boolean anotherGame;
+    int presentClients;
+    int count;
+    int portNum;
 
 	Server(Consumer<Serializable> call, int port){
 		callback = call;
@@ -43,14 +27,11 @@ public class Server{
 		reuseNumbers.add(1);
 		reuseNumbers.add(2);
 		gameInfo = new GameInfo();
-		client1 = false;
-		client2 = false;
-		c1Points = 0;
-		c2Points = 0;
+        presentClients = 0;
+        count = 1;
+        client1sus = false;
+        anotherGame = false;
         server.start();
-        hasReset = false;
-        hasEvaluated = false;
-        inChargeOfE = 0;
 	}
 
 	public class TheServer extends Thread{
@@ -66,11 +47,6 @@ public class Server{
     		    	if (reuseNumbers.size() > 2)
                         System.out.println("Error: Something is wrong with reuse numbers.");
 
-    		    	//ALEX: one of our issues was indexing, im not sure
-    		    	//if this method will work for multiple games but for one game it works
-    		    	//Reuse numbers is the same as how you implemented it, if a
-    		    	//client exits the game their number is put onto the list
-    		    	//I decided against using indices to access clients because its error prone
     		    	if(reuseNumbers.size() > 0){
     			    	threadCheck();
     			    	ClientThread c = new ClientThread(mysocket.accept(), reuseNumbers.get(0));
@@ -170,7 +146,7 @@ public class Server{
             if (clients.size() == 2){
                 gameInfo.publicMessage = "Opponent has join";
                 gameInfo.has2Players = true;
-                setIDs(); //contains FIRST WRITE TO CLIENTS
+                setIDs(); //contains FIRST WRITE TO CLIENTS *****
             }
 
             //FOR HANNA: java is weird, cannot have empty while loop or else thread gets stuck.
@@ -192,83 +168,74 @@ public class Server{
 
 
 		    while(true) {
-             //sending each clientthread their moves
-		    //	gameInfo.playerOnePoints = 0;
-		    //	gameInfo.playerTwoPoints = 0;
+                //TODO: *** Reset everything here ****
+
+    		    while (gameInfo.winner == -1) {
+                    readClientsMove(); //reading move from client
+                    waitForBothMoves(); //waiting till both fields are filled
+
+                    if (clientNumber == 1){
+                        suspendClientOne();
+                    }
+                    else if (clientNumber == 2){
+                        waitTillClientOneSuspends();
+                        evaluateMoves();
+                        unsuspendClientOne();
+                    }
+
+                    //Checking/Printing GameInfo, has appropiate data in both threads
+                    gameInfo.printGameInfo();
+
+                    //This write send gameInfo with both players moves
+                    try{
+                        out.reset();
+                        out.writeObject(gameInfo); //SECOND WRITE TO CLIENTS *****
+                        out.flush();
+                    }
+                    catch(Exception e){
+                        System.out.println("ERROR: could not exchange clients' moves");
+                    }
 
 
 
-		   while (gameInfo.winner == -1) {
+                    try{
+                        GameInfo temp = new GameInfo();   // temp to prevent overriding info
+                        temp = (GameInfo)in.readObject(); // requestReset() function from client SECOND READ *****
+                        if (this.clientNumber == 1){
+                            gameInfo.messageFromPlayerOne =  temp.messageFromPlayerOne;
+                        }
+                        else if (this.clientNumber == 2){
+                            gameInfo.messageFromPlayerTwo =  temp.messageFromPlayerTwo;
+                        }
+                    }
+                    catch(Exception e){}
 
-                try{
-                    GameInfo temp = new GameInfo();   // temp to prevent overriding info
-                    temp = (GameInfo)in.readObject(); // send() function from client FIRST READ.
-                    if(clientNumber == inChargeOfE){
-                        hasEvaluated = false;
+                    while (!gameInfo.messageFromPlayerOne.equals("reset picks") || !gameInfo.messageFromPlayerTwo.equals("reset picks")){
+                        try{
+                            sleep(100);
+                        }
+                        catch(Exception e){
+                            System.out.println("Error in reset loop");
+                        }
                     }
 
                     if(this.clientNumber == 1){
-                        gameInfo.playerOneMove = temp.playerOneMove;
-                        callback.accept("Client 1 picked " + gameInfo.playerOneMove);
-                        if(hasEvaluated == false && !gameInfo.playerTwoMove.equals("")){
-                            Thread.sleep(500);
-                            evaluateMoves();
-                            inChargeOfE = this.clientNumber;
-                            hasEvaluated = true;
-                            callback.accept("Both clients have made their moves!");
-                            callback.accept("Client 1 Points: "+ gameInfo.playerOnePoints);
-                            callback.accept("Client 2 Points: "+ gameInfo.playerTwoPoints);
-                        }
+                        suspendClientOne();
                     }
-                    else if(this.clientNumber == 2){
-                        gameInfo.playerTwoMove = temp.playerTwoMove;
-                        callback.accept("Client 2 picked " + gameInfo.playerTwoMove);
-                        if(hasEvaluated == false && !gameInfo.playerOneMove.equals("")){
-                            evaluateMoves();
-                            inChargeOfE = this.clientNumber;
-                            hasEvaluated = true;
-                            callback.accept("Both clients have made their moves!");
-                            callback.accept("Client 1 Points: "+ gameInfo.playerOnePoints);
-                            callback.accept("Client 2 Points: "+ gameInfo.playerTwoPoints);
-                        }
+                    else if (this.clientNumber == 2){
+                        waitTillClientOneSuspends();
+                        resetPlayerMoves();
+                        unsuspendClientOne();
                     }
-                    else{
-                        System.out.println("ERROR: invalid client number, client number = " + this.clientNumber);
-                    }
-                }//end try
-                catch(Exception e){
-                    System.out.println("ERROR: could not read moves from clients");
-                }
+                    System.out.println("client " + clientNumber + ": ready for next round");
+    		    }//while gameInfo.winner
 
-
-                // waiting till both fields are filled. Strange while-loop: look at explianation on line 165.
-               while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
-               	try {
-                	   sleep(10);
-                	}
-                	catch (Exception e) {
-                		System.out.println("oops");
-                	}
-                }
-
-                //Checking/Printing GameInfo. Has appropiate data in both threads. Client however get empty opponent moves.
-                System.out.println("ClientThread "+ clientNumber +": Game info has both move fields filled. preparing to send to Clients");
-                gameInfo.printGameInfo();
-
-                try{
-                	//writing objects to clients
-                    out.reset();
-                    out.writeObject(gameInfo); //SECOND WRITE TO CLIENTS
-                    out.flush();
-                    //out.writeObject(gameInfo); //Third write for testing
-                }
-                catch(Exception e){
-                    System.out.println("ERROR: could not exchange clients' moves");
-                }
-
+		    	//at this point we have a winner
+                callbackWinner();
+		    	//read from both
                 try{
                     GameInfo temp = new GameInfo();   // temp to prevent overriding info
-                    temp = (GameInfo)in.readObject(); // requestReset() function from client
+                    temp = (GameInfo)in.readObject(); // requestReset() function from client SECOND READ *****
                     if (this.clientNumber == 1){
                         gameInfo.messageFromPlayerOne =  temp.messageFromPlayerOne;
                     }
@@ -278,305 +245,94 @@ public class Server{
                 }
                 catch(Exception e){}
 
-                while (!gameInfo.messageFromPlayerOne.equals("reset picks") || !gameInfo.messageFromPlayerTwo.equals("reset picks")){
-                    try{
-                        sleep(100);
-                    }
-                    catch(Exception e){
-                        System.out.println("Error in reset loop");
-                    }
-                }
-
                 if(this.clientNumber == 1){
-                    try{
-                        suspend();
-                    }
-                    catch(Exception e){
-
-                    }
+                    suspendClientOne();
                 }
                 else if (this.clientNumber == 2){
-                    resetPlayerMoves();
-                    for(ClientThread c : clients){
-                        if (c.clientNumber == 1)
-                            try{
-                                c.resume();
-                            }
-                            catch(Exception e){
-
-                            }
+                    waitTillClientOneSuspends();
+                    checkForAnotherGame();
+                    if(anotherGame == true){
+                        //reset values
+                        gameInfo = new GameInfo();
+                        gameInfo.has2Players = true;
                     }
+                    //else kill one that quit and notify other player and catch it in clients
+                    unsuspendClientOne();
                 }
-
-                System.out.println("client " + clientNumber + ": ready for next round");
-
-		    }//while gameInfo.winner
-
-
-		    	//at this point we have a winner
-
-		    	//read from both
 		    	//check if play again
 		    	//if yes reset everything continue
 		    	//else send message to enemy and break
-
-
-
-			   /* try {
-			    	while (true) {
-    			    	if (gameInfo.has2players == false) {
-                            //if (informedWait == false){
-                            //
-                            //   callback.accept("Client "+ clientNumber + " is waiting for opponent...");
-                            //   informedWait = true;
-                           // }
-    			    	}//end if presentClients<2
-
-
-    			    	//ALEX: this is the wierd part, the first thread has presentClients = 1 when it goes through this try
-    			    	//the second thread has presentClients = 2
-    			    	//even though above I set presentClients = 2 it doesnt work unless
-    			    	//i do the for each loop and notify the opponent thread on line
-    			    	//237. I have to use this same method when sending game objects at the bottom of the try
-    			    	//ME THINKS: instead of making one huge try catch we should be breaking them up into multiple distinct try catches but IDK
-				    	if(presentClients == 2) {
-				    		//presentClients = 2;
-				    		System.out.println("client " + clientNumber + " is at line 207");
-
-				    		//callback.accept("Two players are in the game");
-				    		//once we send this message that opponent has joined to both clients
-				    		//then we need to let them know with clientNumber they are
-				    		//might need to change this to serverGame sending this info not game
-				    		//Me thinks: game is just accepted from the clients
-
-				    		gameInfo.message = "Opponent has join";
-				    		gameInfo.clientNumber = this.clientNumber;
-				    		gameInfo.has2Players = true;
-				    		out.writeObject(gameInfo);
-				    		for(ClientThread c: clients) {
-				    			if (c.clientNumber == this.opponentIndex) {
-                                    c.set_GI_message("Opponent has join");
-                                    c.set_opponentIndex(this.clientNumber);
-                                    c.set_GI_has2Players(true);
-				    			}
-				    		}//end for each
-				    		break;
-				    	}//end if presentClients ==2
-				    }//end second while
-    			}//end try
-			    catch(Exception e) {
-			    	callback.accept("OPPs...Something wrong with the socket from client: " + clientNumber + "....closing down!");
-			    	updateClients("Client #"+clientNumber+" has left the server!");
-			    	presentClients--;
-			    	break;
-			    }
-
-    			try {
-                    //the only thing important in this game object that we
-                    //read is the clientNumber and the move they make
-
-                    //this while should loop through the three games
-                    //we need to send a message to the clients once we start here that
-                    //if they arent in the choose scene they have to go there, can do it at the bottom of the while
-    				while(c1Points != 3 && c2Points!= 3) {
-						//Servergame.isMessage = true;
-						//Servergame.message = "choose";
-						//out.writeObject(Servergame);
-				    	gameInfo = (GameInfo)in.readObject();
-				    	System.out.println(this.clientNumber + " gets here");
-
-				    	if (gameInfo.isMessage == true) {
-				    		callback.accept("Game message for" +clientNumber+ " :"+ gameInfo.message);
-				    		continue;
-				    	}
-				    	else
-				    		callback.accept("Client " + gameInfo.clientNumber + "made the move: " + gameInfo.clientMove);
-
-    				    /////HERE YOU ARE IN THE CLIENT #1/////
-				    	if (this.clientNumber == 1) {
-				    		client1Move = gameInfo.clientMove;
-				    		client1 = true;
-				    		if (!client2) {
-				    			gameInfo.isMessage = true;
-				    			gameInfo.message = "Waiting for other player to make move.";
-				    			callback.accept("Client 1 is waiting for client 2 to make their move");
-				    			//out.writeObject(game);
-				    			//break;
-				    		}
-				    		//else both have made their moves
-				    	}
-
-    					////////HERE YOU ARE IN THE CLIENT #2/////
-				    	else if (this.clientNumber == 2) {
-				    		client2Move = gameInfo.clientMove;
-				    		client2 = true;
-				    		//if client 2 has chosen but client 1 hasnt send a message saying
-				    		//waiting
-				    		if (!client1) {
-				    			gameInfo.isMessage = true;
-				    			gameInfo.message = "Waiting for other player to make move.";
-				    			callback.accept("Client 2 is waiting for client 1 to make their move");
-				    			//out.writeObject(game);
-				    		}
-				    	}
-
-                        //ALEX: that same wierd ass issue here: client1 is true but client2 isnt in the first thread
-                        //whoever makes the choice last has client1 and client2 as true, so i just right their game object to them
-                        //and create the opponent game object and send it too all within the same thread.. this is wierd shit
-                        //again maybe breaking up the try catches might work but im tired and dont want to break it
-    					if (client1 && client2) {
-					    	callback.accept("Both clients have made their moves!");
-    				        if (evaluateMoves(client1Move, client2Move) == "client1") {
-    				    		c1Points++;
-    				    	}
-    				        else if (evaluateMoves(client1Move, client2Move) == "client2") {
-    				           c2Points++;
-    				        }
-    				        else if (evaluateMoves(client1Move, client2Move) == "tie") {
-    				           callback.accept("client 1 and client 2 tied");
-                            }
-
-					        callback.accept("Client 1 Points: "+ c1Points);
-   					    	callback.accept("Client 2 Points: "+ c2Points);
-
-					    	if (this.clientNumber == 1) {
-					    		Servergame.clientNumber = 1;
-					    		Servergame.clientMove = client1Move;
-					    		Servergame.opponentMove = client2Move;
-					    		Servergame.yourPoints = c1Points;
-					    		Servergame.opponentsPoints = c2Points;
-					    		Servergame.isMessage = false;
-					    		//Servergame.message = moveMessage(client1Move, client2Move);
-					    		out.writeObject(Servergame);
-
-					    		for(ClientThread c: clients) {
-					    			if (c.clientNumber == this.opponentIndex) {
-					    				Servergame.clientNumber = 2;
-	    					    		Servergame.clientMove = client2Move;
-	    					    		Servergame.opponentMove = client1Move;
-	    					    		Servergame.yourPoints = c2Points;
-	    					    		Servergame.opponentsPoints = c1Points;
-
-	    					    		Servergame.isMessage = false;
-	    					    		//Servergame.message = moveMessage(client1Move, client2Move);
-	    					    		//out.writeObject(Servergame);
-					    				c.out.writeObject(Servergame);
-					    			}//end of if
-					    		}//end for each
-					    	}//end of if
-					    	else if (this.clientNumber == 2) {
-					    		Servergame.clientNumber = 2;
-					    		Servergame.clientMove = client2Move;
-					    		Servergame.opponentMove = client1Move;
-					    		Servergame.yourPoints = c2Points;
-					    		Servergame.opponentsPoints = c1Points;
-
-					    		Servergame.isMessage = false;
-					    		//Servergame.message = moveMessage(client1Move, client2Move);
-					    		out.writeObject(Servergame);
-
-					    		for(ClientThread c: clients) {
-					    			if (c.clientNumber == this.opponentIndex) {
-					    				Servergame.clientNumber = 1;
-	    					    		Servergame.clientMove = client1Move;
-	    					    		Servergame.opponentMove = client2Move;
-	    					    		Servergame.yourPoints = c1Points;
-	    					    		Servergame.opponentsPoints = c2Points;
-	    					    		Servergame.isMessage = false;
-	    					    		//Servergame.message = moveMessage(client1Move, client2Move);
-					    				c.out.writeObject(Servergame);
-					    			}
-					    		}//end for each
-					    	}
-    				    }//endif
-    			    	//at this point both players have all the info on their moves
-    			    	//we should tell them if niether of them have 3 points go back to their choose scenes
-    			    }//end while
-    			}//end try
-			    catch(Exception e) {
-			    	callback.accept("OPPs...Something wrong with the socket from client: " + clientNumber + "....closing down!");
-			    	updateClients("Client #"+clientNumber+" has left the server!");
-			    	//will have to reset
-			    	//client variables in socket
-			    	presentClients--;
-			    	break;
-			    } //end catch
-
-				//at this point we got here because either client has three points and we broke out of the try loop
-				try {
-					if (c1Points == 3) {
-						if (this.clientNumber == 1) {
-							 game.isMessage = true;
-							 game.message = "YOU WON.";
-							 game.winner = 1;
-							 out.writeObject(game);
-							 //send a message to the client that says they won
-							 //and to go to the end scene
-						}
-						else{
-							//send a message to the client that says they lost and go to the end scene
-							game.isMessage = true;
-							game.message = "YOU LOST.";
-							game.winner = 1;
-							out.writeObject(game);
-						}
-					}//end if client 1 won
-
-					else if (c2Points ==3) {
-						if (this.clientNumber ==2) {
-							//send a message to client that says they won and go to the end scene
-							game.isMessage = true;
-							game.message = "YOU WON.";
-							game.winner = 2;
-							out.writeObject(game);
-						}
-					    else {
-							game.isMessage = true;
-							game.message = "YOU LOST.";
-							game.winner = 2;
-							out.writeObject(game);
-							//send a message to the client that says they lost and go to the end scene
-						}
-					}//end if client 2 won
-				}//end try
-				catch (Exception e) {
-					callback.accept("OPPs...Something wrong with the socket from client: " + clientNumber + "....closing down!");
-				    updateClients("Client #"+clientNumber+" has left the server!");
-				    //will have to reset
-				    //client variables in socket
-				    presentClients--;
-				    break;
-				 }//end catch
-
-				 //at this point we have one more game object to read in
-				 //if the player chooses to play again or quit
-				 //TODO
-				 try {}
-				 catch(Exception e){}
-                 */
 		    }//end while
-
-    		//this big while is the whole ass game and will loop until there is something wrong in the socket
-    		//if a client breaks out of their loop this big while loop will send them back to the
-    		//"waiting for opponent" try in theory
 	    }//end run
 
-        //returns the winner client1 or client2
 
-	void resetPlayerMoves() {
-		gameInfo.playerOneMove = "";
-		gameInfo.playerTwoMove = "";
-		//gameInfo.playerOnePoints = 0;
-		//gameInfo.playerTwoPoints = 0;
-		//gameInfo.winner = -1;
-	}
+        public void readClientsMove(){
+            try{
+                GameInfo temp = new GameInfo();   // temp to prevent overriding info
+                temp = (GameInfo)in.readObject(); // send() function from client FIRST READ *****
 
-     void evaluateMoves() {
-        	//String winner;
-        	//scissors cuts paper and kills lizard
+                if(this.clientNumber == 1){
+                    gameInfo.playerOneMove = temp.playerOneMove;
+                    callback.accept("Client 1 picked " + gameInfo.playerOneMove);
+                }
+                else if(this.clientNumber == 2){
+                    gameInfo.playerTwoMove = temp.playerTwoMove;
+                    callback.accept("Client 2 picked " + gameInfo.playerTwoMove);
+                }
+                else{
+                    System.out.println("ERROR: invalid client number, client number = " + this.clientNumber);
+                }
+            }//end try
+            catch(Exception e){
+                System.out.println("ERROR: could not read moves from clients");
+            }
+        }
+
+        public void waitForBothMoves(){
+             while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
+                try { sleep(10); }
+                catch (Exception e) { System.out.println("*** Error: sleep() failed while waiting for both moves"); }
+            }
+        }
+
+
+        public void waitTillClientOneSuspends(){
+            while (client1sus == false){
+                try{sleep(300);}
+                catch(Exception e){ System.out.println("*** Error: sleep() failed while waiting for suspend"); }
+            }
+        }
+
+
+        public void suspendClientOne(){
+            client1sus = true;
+            suspend();
+        }
+
+
+        public void unsuspendClientOne(){
+            for(ClientThread c : clients){
+                if (c.clientNumber == 1){
+                    try{
+                        c.resume();
+                        client1sus = false;
+                    }
+                    catch(Exception e){
+                        System.out.println("*** Error: unable to resume client thread with ID = 1");
+                    }
+                }
+            }
+        }
+
+
+    	void resetPlayerMoves() {
+    		gameInfo.playerOneMove = "";
+    		gameInfo.playerTwoMove = "";
+    	}
+
+        void evaluateMoves() {
         	if (gameInfo.playerOneMove.equals(gameInfo.playerTwoMove)) {
         		callback.accept("Both players have tied");
-        		//return;
         	}
         	else if (gameInfo.playerOneMove == "scissors" && ( gameInfo.playerTwoMove == "paper" ||gameInfo.playerTwoMove == "lizard")) {
         		gameInfo.playerOnePoints++;
@@ -593,46 +349,32 @@ public class Server{
         	else if (gameInfo.playerOneMove == "spock"&& (gameInfo.playerTwoMove == "rock" || gameInfo.playerTwoMove == "scissors" )) {
         		gameInfo.playerOnePoints++;
         	}
-        	else gameInfo.playerTwoPoints++;
+        	else gameInfo.playerTwoPoints++; //error if empty strings???
 
         	if (gameInfo.playerOnePoints == 3) {
         		gameInfo.winner =1;
         	}
         	else if (gameInfo.playerTwoPoints ==3) {
-        		gameInfo.winner = 1;
+        		gameInfo.winner = 2;
         	}
-
-
-        	return;
         }//evaluateMoves
 
-	//TODO this will return a message like scissors beats paper, scissors beats lizard etc
-	//kinda tedious im lazy rn
-	//the format is c1 is your move the clients move, and c2 is the opponent move
-    /*
-    	String moveMessage (String c1, String c2) {
-    		String message;
-    		//scissors cuts paper and kills lizard
-    		if (c1 == "scissors" && ( c2 == "paper" || c2 == "lizard")) {
-    			message = "client1";
-    		}
-    		else if (c1 == "paper" && (c2 == "rock" || c2 == "spock"  )) {
-    			message = "client1";
-    		}
-    		else if (c1 == "rock" && (c2 == "lizard" || c2 == "scissors"  )) {
-    			message = "client1";
-    		}
-    		else if (c1 == "lizard" && (c2 == "spock" || c2 == "paper"  )) {
-    			message = "client1";
-    		}
-    		else if (c1 == "spock"&& (c2 == "rock" || c2 == "scissors" )) {
-    			message = "client1";
-    		}
-    		else message = "client2";
+        public void callbackWinner(){
+            if(gameInfo.winner == 1){
+                callback.accept("Client 1 Won");
+            }
+            else if(gameInfo.winner == 2){
+                callback.accept("Client 2 Won");
+            }
+        }//end of callbackWinner
 
-    		return message;
-    	}
-    */
+
+        public void checkForAnotherGame(){
+            if (gameInfo.messageFromPlayerOne.equals("Play Again") && gameInfo.messageFromPlayerTwo.equals("Play Again"))
+                anotherGame = true;
+        }
+
+
 	}//end of ClientThread
 }//end server
 
