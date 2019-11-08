@@ -166,7 +166,13 @@ public class Server{
             //FOR HANNA: java is weird, cannot have empty while loop or else thread gets stuck.
             while(gameInfo.has2Players == false){
                 //blocking process till two players are present, provides order
-                System.out.print(".");
+                //System.out.print(".");
+            	try {
+            	Thread.sleep(100);
+            	}
+            	catch (Exception e) {
+            		System.out.println("oops");
+            	}
             }
 
             //Both client threads make it this far
@@ -176,7 +182,7 @@ public class Server{
 
 
 		    while(true) {
-                //sending each clientthread their moves
+             //sending each clientthread their moves
 		    //	gameInfo.playerOnePoints = 0;
 		    //	gameInfo.playerTwoPoints = 0;
 		    	
@@ -220,7 +226,12 @@ public class Server{
 
                 // waiting till both fields are filled. Strange while-loop: look at explianation on line 165.
                while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
-                    System.out.print(".");
+               	try {
+                	Thread.sleep(100);
+                	}
+                	catch (Exception e) {
+                		System.out.println("oops");
+                	}
                 }
 
                 //Checking/Printing GameInfo. Has appropiate data in both threads. Client however get empty opponent moves.
@@ -239,10 +250,7 @@ public class Server{
                     **********************************************************************************************************************
                   FIX : none yet
                 */
-                //if(gameInfo.has2Players == true) {
-			    	
-				    
-                //}//end if
+           
              
                 try{
                 	callback.accept("Both clients have made their moves!");
@@ -264,13 +272,12 @@ public class Server{
                 //Both clients made their moves at this point
                 //now figure 
                 
-              resetPlayerMoves();
+               resetPlayerMoves();
                 
 		    	}//while gameInfo.winner 
 		    	
 		   	
 		    	//at this point we have a winner
-		    	//tr
 		    	
 		    	//read from both
 		    	//check if play again
