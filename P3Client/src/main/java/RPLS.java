@@ -71,6 +71,16 @@ public class RPLS extends Application {
 				if (message.equals("")){
 					information_listView.getItems().add("Error null move from opponent");
 				}
+				if (message.equals("You Won!")){
+					winner.setText("YOU WON!");
+					primaryStage.setScene(sceneMap.get("end"));
+					primaryStage.show();
+				}
+				if (message.equals("You Lost!")){
+					winner.setText("YOU LOST!");
+					primaryStage.setScene(sceneMap.get("end"));
+					primaryStage.show();
+				}
 				/*
 				if (message.equals("Moves made")) {
 					information_listView.getItems().add("Opponent has selected!");
@@ -197,6 +207,14 @@ public class RPLS extends Application {
 			opponentMove.setImage(null);;
 			primaryStage.setScene(sceneMap.get("choose"));
 		});
+
+		//TODO: alex assignment.
+		playAgain.setOnAction(e->{
+
+		});
+		quit.setOnAction(e->{
+
+		});
 	}//end start
 
 	TextField port, ipAddress;
@@ -257,7 +275,6 @@ public class RPLS extends Application {
 		choosePane = new BorderPane();
 		//the center will be an imageView
 		clientMove = new ImageView();
-
 		choosePane.setCenter(clientMove); //*************HAVE TO RESET IN EVENT HANDLER
 		//the Bottoms is an HBox with the move buttons
 		moveButtons = new HBox(rock, paper, scissors, lizard, spock, sendMove);

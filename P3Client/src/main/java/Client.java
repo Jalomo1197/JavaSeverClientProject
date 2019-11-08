@@ -71,81 +71,44 @@ public class Client extends Thread{
 		sceneRequest.accept(gameInfo.publicMessage); //gameInfo.publicMessage contains "Opponent has joined"
 
 		while(true) {
-			callback.accept("you're client: " + clientID); //debugging purposes
-			//GameInfo temp = new GameInfo();
-			try{
-				//PROBLEM HERE. server has values filled but when read the values of the opponent move are empty.
-				// Note: temp GameInfo was not neede here because Server had both moves saved.
-				gameInfo = (GameInfo)in.readObject(); //SECOND READ, BLOCKING METHOD. Server SHOULD have both moves saved.
-				//gameInfo = (GameInfo)in.readObject(); //third write for testing
-				callback.accept("Opponent made move!");
-				//gameInfo.printGameInfo(); //this shows how the gameInfo was read
-			}
-			catch(Exception e){
-				System.out.println("ERROR: could not read opponent move");
+			callback.accept("You're client: " + clientID); //debugging purposes
+			//while no winner
+			while(gameInfo.winner == -1){
+				try{
+					gameInfo = (GameInfo)in.readObject(); //SECOND READ, BLOCKING METHOD. Server SHOULD have both moves saved.
+					callback.accept("Opponent made move!");
+				}
+				catch(Exception e){
+					System.out.println("ERROR: could not read opponent move");
+				}
+
+				if (clientID == 1){
+					sceneRequest.accept(gameInfo.playerTwoMove);
+					sceneRequest.accept("		Points");
+					sceneRequest.accept("Your points:      " + gameInfo.playerOnePoints);
+					sceneRequest.accept("Opponent points:  " + gameInfo.playerTwoPoints);
+				}
+				else if (clientID == 2){
+					sceneRequest.accept(gameInfo.playerOneMove);
+					sceneRequest.accept("		      Points");
+					sceneRequest.accept("Your points:      " + gameInfo.playerTwoPoints);
+					sceneRequest.accept("Opponent points:  " + gameInfo.playerOnePoints);
+				}
 			}
 
-			//FOR HANA:
-			/*
-			 * Because opponent move field empty, clients list view outputs "Error null move from opponent".
-			 * By null I mean "" empty string. which is what it is initialized with when creating a GameInfo object.
-			*/
-			if (clientID == 1){
-				//gameInfo.playerTwoMove = temp.playerTwoMove;
-				sceneRequest.accept(gameInfo.playerTwoMove);
-			}
-			else if (clientID == 2){
-				//gameInfo.playerOneMove = temp.playerOneMove;
-				sceneRequest.accept(gameInfo.playerOneMove);
-			}
-
-	/*		//Waiting at while loop until opponent make there move.
-			if (clientID == 1){
-				//while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
-                //        System.out.print(".");
-                //}
-
-				//while(gameInfo.playerTwoMove.equals("")){
-					try{
-						gameInfo = (GameInfo)in.readObject();
-						callback.accept("Opponent made move!");
-						gameInfo.printGameInfo();
-					}
-					catch(Exception e){
-						System.out.println("ERROR: could not read opponent move");
-					}
-				//}
-				sceneRequest.accept(gameInfo.playerTwoMove);
-			}
-			else if (clientID == 2){
-				//while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
-                //        System.out.print(".");
-                //    }
-
-				//while(gameInfo.playerOneMove.equals("")){
-					try{
-						gameInfo = (GameInfo)in.readObject();
-						callback.accept("Opponent made move!");
-						gameInfo.printGameInfo();
-					}
-					catch(Exception e){
-						System.out.println("ERROR: could not read opponent move");
-					}
-				//}
-				sceneRequest.accept(gameInfo.playerOneMove);
+			//There's a winner. use sceneRequest to notify players
+			if (this.clientID == gameInfo.winner){
+				callback.accept("You Won!");
+				sceneRequest.accept("You Won!");
 			}
 			else{
-				System.out.println("ERROR: Client ID error, while wating for opponent move");
+				callback.accept("You Lost!");
+				sceneRequest.accept("You Lost!");
 			}
-	*/
+
 
 			while(true){}//for teasing
 			//callback.accept("Opponent made their move!");
-
-
-
-
-
 
 		/*
 			if (opponentPresent == false) {
