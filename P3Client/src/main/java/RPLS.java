@@ -210,10 +210,18 @@ public class RPLS extends Application {
 
 		//TODO: alex assignment.
 		playAgain.setOnAction(e->{
-
+			if (clientConnection.clientID == 1)
+				clientConnection.gameInfo.messageFromPlayerOne = "Play Again";
+			if (clientConnection.clientID == 2)
+				clientConnection.gameInfo.messageFromPlayerTwo = "Play Again";
+			clientConnection.send();
 		});
 		quit.setOnAction(e->{
-
+			if (clientConnection.clientID == 1)
+				clientConnection.gameInfo.messageFromPlayerOne = "Quit";
+			if (clientConnection.clientID == 2)
+				clientConnection.gameInfo.messageFromPlayerTwo = "Quit";
+			clientConnection.send();
 		});
 	}//end start
 
