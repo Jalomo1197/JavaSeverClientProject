@@ -180,6 +180,7 @@ public class Server{
                     else if (clientNumber == 2){
                         waitTillClientOneSuspends();
                         evaluateMoves();
+                        evaluateWinner();
                         unsuspendClientOne();
                     }
 
@@ -333,31 +334,43 @@ public class Server{
         void evaluateMoves() {
         	if (gameInfo.playerOneMove.equals(gameInfo.playerTwoMove)) {
         		callback.accept("Both players have tied");
+        		return;
         	}
-        	else if (gameInfo.playerOneMove == "scissors" && ( gameInfo.playerTwoMove == "paper" ||gameInfo.playerTwoMove == "lizard")) {
+        	else if ((gameInfo.playerOneMove.equals("scissors"))&& ( gameInfo.playerTwoMove.equals("paper") || gameInfo.playerTwoMove.equals("lizard"))){
         		gameInfo.playerOnePoints++;
+        		return;
         	}
-        	else if (gameInfo.playerOneMove == "paper" && (gameInfo.playerTwoMove== "rock" || gameInfo.playerTwoMove== "spock"  )) {
+        	else if ( (gameInfo.playerOneMove.equals("paper") ) && (gameInfo.playerTwoMove.equals("rock") || gameInfo.playerTwoMove.equals("spock") )) {
         		gameInfo.playerOnePoints++;
+        		return;
         	}
-        	else if (gameInfo.playerOneMove == "rock" && (gameInfo.playerTwoMove == "lizard" || gameInfo.playerTwoMove == "scissors"  )) {
+        	else if ((gameInfo.playerOneMove.equals("rock")) && (gameInfo.playerTwoMove.equals("lizard")|| gameInfo.playerTwoMove.equals("scissors") )) {
         		gameInfo.playerOnePoints++;
+        		return;
         	}
-        	else if (gameInfo.playerOneMove == "lizard" && (gameInfo.playerTwoMove== "spock" || gameInfo.playerTwoMove == "paper"  )) {
+        	else if ((gameInfo.playerOneMove.equals("lizard")) && (gameInfo.playerTwoMove.equals("spock") || gameInfo.playerTwoMove.equals("paper")  )) {
         		gameInfo.playerOnePoints++;
+        		return;
         	}
-        	else if (gameInfo.playerOneMove == "spock"&& (gameInfo.playerTwoMove == "rock" || gameInfo.playerTwoMove == "scissors" )) {
+        	else if ((gameInfo.playerOneMove.equals("spock")) && (gameInfo.playerTwoMove.equals("rock")|| gameInfo.playerTwoMove.equals("scissors") )) {
         		gameInfo.playerOnePoints++;
+        		return;
         	}
         	else gameInfo.playerTwoPoints++; //error if empty strings???
+        		return;
 
+        
+        }//evaluateMoves
+        
+        void evaluateWinner(){
         	if (gameInfo.playerOnePoints == 3) {
         		gameInfo.winner =1;
         	}
         	else if (gameInfo.playerTwoPoints ==3) {
         		gameInfo.winner = 2;
         	}
-        }//evaluateMoves
+        	else gameInfo.winner = -1;
+        }
 
         public void callbackWinner(){
             if(gameInfo.winner == 1){
