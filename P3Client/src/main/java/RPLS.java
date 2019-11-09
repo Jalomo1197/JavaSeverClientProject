@@ -54,22 +54,10 @@ public class RPLS extends Application {
 				if (message.equals("Opponent has join")){
 					primaryStage.setScene(sceneMap.get("choose"));
 					primaryStage.show();
-					//idk about this.
-					//clientConnection.send(true);
 				}
 				if (message.equals("Opponent has left")) {
 					primaryStage.setScene(sceneMap.get("waiting"));
 					primaryStage.show();
-				}
-				for (String x : validMoves){
-					if (message.equals(x)){
-						information_listView.getItems().add("Opponent picked " + x);
-						opponentMove.setImage(imageMap.get(x));
-						break;
-					}
-				}
-				if (message.equals("")){
-					information_listView.getItems().add("Error null move from opponent");
 				}
 				if (message.equals("You Won!")){
 					winner.setText("YOU WON!");
@@ -81,22 +69,25 @@ public class RPLS extends Application {
 					primaryStage.setScene(sceneMap.get("end"));
 					primaryStage.show();
 				}
-				/*
-				if (message.equals("Moves made")) {
-					information_listView.getItems().add("Opponent has selected!");
-					opponentMove.setImage(imageMap.get(clientConnection.opponentMove));
-					primaryStage.setScene(sceneMap.get("show"));
-				}
-				if (message.equals("end")) {
-					primaryStage.setScene(sceneMap.get("end"));
-					primaryStage.show();
-				}
-
-				if (message.equals("choose")) {
+				if (message.equals("Play Again")) {
+					choosePane.setRight(information_listView);
+					information_listView.getItems().clear();
+					cMove.setImage(null);
+					clientMove.setImage(null);
+					opponentMove.setImage(null);
 					primaryStage.setScene(sceneMap.get("choose"));
 					primaryStage.show();
-
-				}*/
+				}
+				if (message.equals("")){
+					information_listView.getItems().add("Error null move from opponent");
+				}
+				for (String x : validMoves){
+					if (message.equals(x)){
+						information_listView.getItems().add("Opponent picked " + x);
+						opponentMove.setImage(imageMap.get(x));
+						break;
+					}
+				}
 			});
 		};
 		primaryStage.setScene(sceneMap.get("intro"));
@@ -217,14 +208,8 @@ public class RPLS extends Application {
 				clientConnection.gameInfo.messageFromPlayerTwo = "Play Again";
 			clientConnection.send();
 			clientConnection.playAgain = true;
-
-			choosePane.setRight(information_listView);
-			information_listView.getItems().clear();;
-			//reset the image views
-			cMove.setImage(null);
-			clientMove.setImage(null);
-			opponentMove.setImage(null);
-			primaryStage.setScene(sceneMap.get("choose"));
+			primaryStage.setScene(sceneMap.get("waiting"));
+		    primaryStage.show();
 		});
 		quit.setOnAction(e->{
 			if (clientConnection.clientID == 1)

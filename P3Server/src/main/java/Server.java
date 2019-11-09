@@ -188,35 +188,15 @@ public class Server{
                     gameInfo.printGameInfo();
 
                     //This write send gameInfo with both players moves
-                    try{
-                        out.reset();
-                        out.writeObject(gameInfo); //SECOND WRITE TO CLIENTS *****
-                        out.flush();
-                    }
-                    catch(Exception e){
-                        System.out.println("ERROR: could not exchange clients' moves");
-                    }
-
-
-
-                    try{
-                        GameInfo temp = new GameInfo();   // temp to prevent overriding info
-                        temp = (GameInfo)in.readObject(); // requestReset() function from client SECOND READ *****
-                        if (this.clientNumber == 1){
-                            gameInfo.messageFromPlayerOne =  temp.messageFromPlayerOne;
-                        }
-                        else if (this.clientNumber == 2){
-                            gameInfo.messageFromPlayerTwo =  temp.messageFromPlayerTwo;
-                        }
-                    }
-                    catch(Exception e){}
+                    writeObject_GameInfo();
+                    tempObjectRead(); //this read is to know if players click "Next Round" button.
 
                     while (!gameInfo.messageFromPlayerOne.equals("reset picks") || !gameInfo.messageFromPlayerTwo.equals("reset picks")){
                         try{
                             sleep(100);
                         }
                         catch(Exception e){
-                            System.out.println("Error in reset loop");
+                            System.out.println("Error in reset picks loop");
                         }
                     }
 
@@ -231,20 +211,9 @@ public class Server{
                     System.out.println("client " + clientNumber + ": ready for next round");
     		    }//while gameInfo.winner
 
-		    	//at this point we have a winner
-                callbackWinner();
-		    	//read from both
-                try{
-                    GameInfo temp = new GameInfo();   // temp to prevent overriding info
-                    temp = (GameInfo)in.readObject(); // requestReset() function from client SECOND READ *****
-                    if (this.clientNumber == 1){
-                        gameInfo.messageFromPlayerOne =  temp.messageFromPlayerOne;
-                    }
-                    else if (this.clientNumber == 2){
-                        gameInfo.messageFromPlayerTwo =  temp.messageFromPlayerTwo;
-                    }
-                }
-                catch(Exception e){}
+
+                callbackWinner(); //let server gui know winner
+                tempObjectRead(); //this read is to check if players are playing again "Play Again" | "Quit"
 
                 if(this.clientNumber == 1){
                     suspendClientOne();
@@ -256,15 +225,41 @@ public class Server{
                         //reset values
                         gameInfo = new GameInfo();
                         gameInfo.has2Players = true;
+                        callback.accept("Clients are going to play another game");
                     }
-                    //else kill one that quit and notify other player and catch it in clients
+                    else{ //else kill one that quit and notify other player and catch it in clients TODO *****
+                        gameInfo.has2Players = false;
+                    }
+                    writeObject_GameInfo(); //infoming players if there is another game.
                     unsuspendClientOne();
                 }
-		    	//check if play again
-		    	//if yes reset everything continue
-		    	//else send message to enemy and break
+
 		    }//end while
 	    }//end run
+
+        public void writeObject_GameInfo(){
+            try{
+                out.reset();
+                out.writeObject(gameInfo); //SECOND WRITE TO CLIENTS *****
+                out.flush();
+            }
+            catch(Exception e){
+                System.out.println("ERROR: could not write to clients");
+            }
+        }
+
+
+        public void tempObjectRead(){
+            try{
+                GameInfo temp = new GameInfo(); // temp to prevent overriding info
+                temp = (GameInfo)in.readObject();
+                if (this.clientNumber == 1)
+                    gameInfo.messageFromPlayerOne =  temp.messageFromPlayerOne;
+                else if (this.clientNumber == 2)
+                    gameInfo.messageFromPlayerTwo =  temp.messageFromPlayerTwo;
+            }
+            catch(Exception e){}
+        }
 
 
         public void readClientsMove(){
@@ -356,21 +351,20 @@ public class Server{
         		gameInfo.playerOnePoints++;
         		return;
         	}
-        	else gameInfo.playerTwoPoints++; //error if empty strings???
-        		return;
-
-        
+        	else
+                gameInfo.playerTwoPoints++; //error if empty strings???
         }//evaluateMoves
-        
+
+
         void evaluateWinner(){
-        	if (gameInfo.playerOnePoints == 3) {
-        		gameInfo.winner =1;
-        	}
-        	else if (gameInfo.playerTwoPoints ==3) {
+        	if (gameInfo.playerOnePoints == 3)
+        		gameInfo.winner = 1;
+        	else if (gameInfo.playerTwoPoints ==3)
         		gameInfo.winner = 2;
-        	}
-        	else gameInfo.winner = -1;
+        	else
+                gameInfo.winner = -1;
         }
+
 
         public void callbackWinner(){
             if(gameInfo.winner == 1){

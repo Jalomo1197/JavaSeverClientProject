@@ -64,56 +64,62 @@ public class Client extends Thread{
 		sceneRequest.accept(gameInfo.publicMessage); //gameInfo.publicMessage contains "Opponent has joined"
 
 		while(true) {
-			callback.accept("You're client: " + clientID); //debugging purposes
-			//while no winner
-			while(gameInfo.winner == -1){
-				try{
-					gameInfo = (GameInfo)in.readObject(); //SECOND READ, BLOCKING METHOD. Server SHOULD have both moves saved.
-					callback.accept("Opponent made move!");
-				}
-				catch(Exception e){
-					System.out.println("ERROR: could not read opponent move");
-				}
-
-				if (clientID == 1){
-					sceneRequest.accept(gameInfo.playerTwoMove);
-					callback.accept("		Points");
-					callback.accept("Your points:      " + gameInfo.playerOnePoints);
-					callback.accept("Opponent points:  " + gameInfo.playerTwoPoints);
-				}
-				else if (clientID == 2){
-					sceneRequest.accept(gameInfo.playerOneMove);
-					callback.accept("		      Points");
-					callback.accept("Your points:      " + gameInfo.playerTwoPoints);
-					callback.accept("Opponent points:  " + gameInfo.playerOnePoints);
-				}
+			callback.accept("You're client: " + clientID); //debugging purposes TODO: delete
+			while(gameInfo.winner == -1){ //while there is no winner
+				readObject_GameInfo(); //This read is to read opponent move
+				displayPoints(); //displaying points and opponent's move
 			}
+			declareOutcome(); //There's a winner. use sceneRequest to notify players
+			readObject_GameInfo(); //this read is to check is another game is being played by both players
 
-			//There's a winner. use sceneRequest to notify players
-			if (this.clientID == gameInfo.winner){
-				callback.accept("You Won!");
-				sceneRequest.accept("You Won!");
+			if (gameInfo.has2Players == true){
+				sceneRequest.accept("Play Again");
 			}
 			else{
-				callback.accept("You Lost!");
-				sceneRequest.accept("You Lost!");
+				sceneRequest.accept("Opponent has left");
 			}
-			while(playAgain == false ){
-				try{
-					sleep(1000);
-				}
-				catch(Exception e){}
-			}//for teasing
-
-			gameInfo = new GameInfo();
-			gameInfo.has2Players = true; //probably not but just to not brake anything for now
 		}//end while true
 	}//end run
 
 
+	public void displayPoints(){
+		if (clientID == 1){
+			sceneRequest.accept(gameInfo.playerTwoMove);
+			callback.accept("		Points");
+			callback.accept("Your points:      " + gameInfo.playerOnePoints);
+			callback.accept("Opponent points:  " + gameInfo.playerTwoPoints);
+		}
+		else if (clientID == 2){
+			sceneRequest.accept(gameInfo.playerOneMove);
+			callback.accept("		      Points");
+			callback.accept("Your points:      " + gameInfo.playerTwoPoints);
+			callback.accept("Opponent points:  " + gameInfo.playerOnePoints);
+		}
+	}
 
-	//Will our data will be a String for the move?
-	//or will it be a whole game info class object
+
+	public void declareOutcome(){
+		try { sleep(1200); } //sleep to not change sence to quickly.
+	    catch(Exception e){}
+		if (this.clientID == gameInfo.winner){
+			callback.accept("You Won!");
+			sceneRequest.accept("You Won!");
+		}
+		else{
+			callback.accept("You Lost!");
+			sceneRequest.accept("You Lost!");
+		}
+	}
+
+
+	public void readObject_GameInfo(){
+		try{
+			gameInfo = (GameInfo)in.readObject();// Reading to see if another game.
+		}
+		catch(Exception e){ System.out.println("Could not read from server. Stream failed.");}
+	}
+
+
 	public void send(String move) {
 		if (clientID == 1){
 			gameInfo.playerOneMove = move;
@@ -137,6 +143,7 @@ public class Client extends Thread{
 		}
 	}
 
+
 	public void send(){
 		try{
 			out.reset();
@@ -147,6 +154,7 @@ public class Client extends Thread{
 			System.out.println("Error: Unable to send option to play again");
 		}
 	}
+
 
 	public void requestReset(){
 		if (clientID == 1){
