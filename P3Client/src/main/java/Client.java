@@ -69,6 +69,7 @@ public class Client extends Thread{
 				readObject_GameInfo(); //This read is to read opponent move
 				displayPoints(); //displaying points and opponent's move
 			}
+			requestReset(); //must send after game so server doesnt get stuck.
 			declareOutcome(); //There's a winner. use sceneRequest to notify players
 			readObject_GameInfo(); //this read is to check is another game is being played by both players
 
@@ -83,6 +84,7 @@ public class Client extends Thread{
 
 
 	public void displayPoints(){
+		callback.accept("		        "); //spacer
 		if (clientID == 1){
 			sceneRequest.accept(gameInfo.playerTwoMove);
 			callback.accept("		Points");
@@ -91,8 +93,8 @@ public class Client extends Thread{
 		}
 		else if (clientID == 2){
 			sceneRequest.accept(gameInfo.playerOneMove);
-			callback.accept("		      Points");
-			callback.accept("Your points:      " + gameInfo.playerTwoPoints);
+			callback.accept("		        Points");
+			callback.accept("Your points:         " + gameInfo.playerTwoPoints);
 			callback.accept("Opponent points:  " + gameInfo.playerOnePoints);
 		}
 	}
@@ -123,11 +125,11 @@ public class Client extends Thread{
 	public void send(String move) {
 		if (clientID == 1){
 			gameInfo.playerOneMove = move;
-			callback.accept("(1)You picked " + gameInfo.playerOneMove + "!");
+			callback.accept("You picked " + gameInfo.playerOneMove + "!");
 		}
 		else if (clientID == 2){
 			gameInfo.playerTwoMove = move;
-			callback.accept("(2)You picked " + gameInfo.playerTwoMove + "!");
+			callback.accept("You picked " + gameInfo.playerTwoMove + "!");
 		}
 		else{
 			System.out.println("Error: Client ID is not valid. Client ID = " + clientID);

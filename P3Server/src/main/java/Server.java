@@ -190,15 +190,7 @@ public class Server{
                     //This write send gameInfo with both players moves
                     writeObject_GameInfo();
                     tempObjectRead(); //this read is to know if players click "Next Round" button.
-
-                    while (!gameInfo.messageFromPlayerOne.equals("reset picks") || !gameInfo.messageFromPlayerTwo.equals("reset picks")){
-                        try{
-                            sleep(100);
-                        }
-                        catch(Exception e){
-                            System.out.println("Error in reset picks loop");
-                        }
-                    }
+                    confirmBothClickedNextRound();
 
                     if(this.clientNumber == 1){
                         suspendClientOne();
@@ -211,12 +203,14 @@ public class Server{
                     System.out.println("client " + clientNumber + ": ready for next round");
     		    }//while gameInfo.winner
 
-
-                callbackWinner(); //let server gui know winner
                 tempObjectRead(); //this read is to check if players are playing again "Play Again" | "Quit"
+
+                //both are not reading parallel must wait till both decide
+                confirmBothClicked_PlayAgainOrQuit();
 
                 if(this.clientNumber == 1){
                     suspendClientOne();
+                    System.out.println("client " + clientNumber + " unsuspended");
                 }
                 else if (this.clientNumber == 2){
                     waitTillClientOneSuspends();
@@ -230,17 +224,42 @@ public class Server{
                     else{ //else kill one that quit and notify other player and catch it in clients TODO *****
                         gameInfo.has2Players = false;
                     }
-                    writeObject_GameInfo(); //infoming players if there is another game.
                     unsuspendClientOne();
                 }
+                writeObject_GameInfo(); //infoming players if there is another game.
 
 		    }//end while
 	    }//end run
 
+
+        public void confirmBothClicked_PlayAgainOrQuit(){
+            while (!gameInfo.messageFromPlayerOne.equals("Play Again") && !gameInfo.messageFromPlayerOne.equals("Quit")){
+                try{ sleep(100); }
+                catch(Exception e){ System.out.println("Unable to sleep thread. sleep id = 1b");}
+            }
+            while (!gameInfo.messageFromPlayerTwo.equals("Play Again") && !gameInfo.messageFromPlayerTwo.equals("Quit")){
+                try{ sleep(100); }
+                catch(Exception e){ System.out.println("Unable to sleep thread. sleep id = 2b");}
+            }
+        }
+
+
+        public void confirmBothClickedNextRound(){
+            while (!gameInfo.messageFromPlayerOne.equals("reset picks") || !gameInfo.messageFromPlayerTwo.equals("reset picks")){
+                try{
+                    sleep(100);
+                }
+                catch(Exception e){
+                    System.out.println("Error in reset picks loop");
+                }
+            }
+        }
+
+
         public void writeObject_GameInfo(){
             try{
                 out.reset();
-                out.writeObject(gameInfo); //SECOND WRITE TO CLIENTS *****
+                out.writeObject(gameInfo);
                 out.flush();
             }
             catch(Exception e){
@@ -284,6 +303,7 @@ public class Server{
             }
         }
 
+
         public void waitForBothMoves(){
              while(gameInfo.playerOneMove.equals("") || gameInfo.playerTwoMove.equals("")){
                 try { sleep(10); }
@@ -310,8 +330,8 @@ public class Server{
             for(ClientThread c : clients){
                 if (c.clientNumber == 1){
                     try{
-                        c.resume();
                         client1sus = false;
+                        c.resume();
                     }
                     catch(Exception e){
                         System.out.println("*** Error: unable to resume client thread with ID = 1");
@@ -325,6 +345,7 @@ public class Server{
     		gameInfo.playerOneMove = "";
     		gameInfo.playerTwoMove = "";
     	}
+
 
         void evaluateMoves() {
         	if (gameInfo.playerOneMove.equals(gameInfo.playerTwoMove)) {
@@ -359,10 +380,11 @@ public class Server{
         void evaluateWinner(){
         	if (gameInfo.playerOnePoints == 3)
         		gameInfo.winner = 1;
-        	else if (gameInfo.playerTwoPoints ==3)
+        	else if (gameInfo.playerTwoPoints == 3)
         		gameInfo.winner = 2;
-        	else
-                gameInfo.winner = -1;
+
+            if (gameInfo.winner != -1)
+                callbackWinner();
         }
 
 
